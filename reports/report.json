@@ -1,0 +1,4 @@
+{
+  "generatedAt": null,
+  "note": "Run npm run test:all after docker compose up to populate Artillery reports and synthesis-report.json"
+}

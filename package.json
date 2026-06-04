@@ -1,0 +1,16 @@
+{
+  "name": "api-gateway-routing-research",
+  "version": "1.0.0",
+  "description": "Analyzing the Complexity of Request Routing Algorithms in Microservices Architecture",
+  "scripts": {
+    "start": "docker compose up --build",
+    "test:read": "artillery run load-tests/artillery-read-heavy.yml --output reports/report-read-heavy.json",
+    "test:compute": "artillery run load-tests/artillery-compute-heavy.yml --output reports/report-compute-heavy.json",
+    "test:mixed": "artillery run load-tests/artillery-mixed.yml --output reports/report-mixed.json",
+    "test:all": "npm run test:read && npm run test:compute && npm run test:mixed && node scripts/generate-synthesis-report.js",
+    "report": "node scripts/generate-synthesis-report.js"
+  },
+  "devDependencies": {
+    "artillery": "^2.0.21"
+  }
+}

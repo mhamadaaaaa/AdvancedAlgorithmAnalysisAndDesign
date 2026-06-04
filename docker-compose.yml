@@ -1,0 +1,70 @@
+
+
+
+services:
+  gateway:
+    image: node:18-alpine
+    command: sh -c "npm install express axios && node server.js"
+    ports:
+      - "9090:8080"
+    volumes:
+      - ./api-gateway:/usr/src/app
+      - ./reports:/usr/src/reports
+    working_dir: /usr/src/app
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - service1
+      - service2
+      - service3
+    networks:
+      - load-balancer-net
+
+  service1:
+    image: node:18-alpine
+    command: sh -c "npm install express && node server.js"
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - SERVICE_NAME=Service_Node_A
+      - WEIGHT=1
+    volumes:
+      - ./microservice:/usr/src/app
+    working_dir: /usr/src/app
+    networks:
+      - load-balancer-net
+
+  service2:
+    image: node:18-alpine
+    command: sh -c "npm install express && node server.js"
+    ports:
+      - "3002:3002"
+    environment:
+      - PORT=3002
+      - SERVICE_NAME=Service_Node_B
+      - WEIGHT=2
+    volumes:
+      - ./microservice:/usr/src/app
+    working_dir: /usr/src/app
+    networks:
+      - load-balancer-net
+
+  service3:
+    image: node:18-alpine
+    command: sh -c "npm install express && node server.js"
+    ports:
+      - "3003:3003"
+    environment:
+      - PORT=3003
+      - SERVICE_NAME=Service_Node_C
+      - WEIGHT=3
+    volumes:
+      - ./microservice:/usr/src/app
+    working_dir: /usr/src/app
+    networks:
+      - load-balancer-net
+
+networks:
+  load-balancer-net:
+    driver: bridge

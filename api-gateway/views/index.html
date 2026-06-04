@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Analyzing the Complexity of Request Routing Algorithms in Microservices Architecture: A Case Study on API Gateways — The Islamic University of Gaza">
+    <title>منصة بحث خوارزميات التوجيه | الجامعة الإسلامية بغزة</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="./styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+    <!-- ===== Fixed Animated Background Layers ===== -->
+    <div class="bg-grid"></div>
+    <div class="bg-aurora"></div>
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+
+    <!-- Particle canvas -->
+    <canvas id="particleCanvas" style="position:fixed; inset:0; z-index:0; pointer-events:none; opacity:.5;"></canvas>
+
+    <!-- ==================== Navigation ==================== -->
+    <nav class="navbar" id="navbar">
+        <div class="container">
+            <a href="#hero" class="nav-brand">
+                <div class="nav-brand-icon">⚡</div>
+                <span class="nav-brand-text">API Routing<br>Research</span>
+            </a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#proposal" id="nav-proposal"><span class="nav-icon">📖</span><span
+                            class="nav-text">خطة البحث</span></a></li>
+                <li><a href="#results" id="nav-results"><span class="nav-icon">📊</span><span class="nav-text">النتائج
+                            الحية</span></a></li>
+                <li><a href="#simulation" id="nav-simulation"><span class="nav-icon">🎮</span><span
+                            class="nav-text">المحاكاة</span></a></li>
+                <li><a href="#architecture" id="nav-architecture"><span class="nav-icon">🏗️</span><span
+                            class="nav-text">المعمارية</span></a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- ==================== Hero Section ==================== -->
+    <header class="hero" id="hero">
+        <div class="hero-orb hero-orb-1"></div>
+        <div class="hero-orb hero-orb-2"></div>
+        <div class="hero-orb hero-orb-3"></div>
+
+        <div class="hero-content">
+            <div class="hero-badge">🎓 الجامعة الإسلامية بغزة — كلية تكنولوجيا المعلومات</div>
+            <h1>
+                تحليل تعقيد خوارزميات توجيه<br>الطلبات<br>في بنية الخدمات المصغرة
+                <span class="en">Analyzing the Complexity of Request Routing Algorithms<br>in Microservices
+                    Architecture: A Case Study on API Gateways</span>
+            </h1>
+
+            <!-- Author Info Cards -->
+            <div class="hero-meta">
+                <div class="hero-meta-item">
+                    <span class="icon">👨‍🎓</span>
+                    <span class="label">الطالب</span>
+                    <span class="value">محمد عبد الجواد العطار</span>
+                </div>
+                <div class="hero-meta-item">
+                    <span class="icon">🆔</span>
+                    <span class="label">الرقم الجامعي</span>
+                    <span class="value text-en">120250628</span>
+                </div>
+                <div class="hero-meta-item">
+                    <span class="icon">👨‍🏫</span>
+                    <span class="label">إشراف</span>
+                    <span class="value">د. أشرف مغاري</span>
+                </div>
+                <div class="hero-meta-item">
+                    <span class="icon">📅</span>
+                    <span class="label">التاريخ</span>
+                    <span class="value text-en">4 / 2026</span>
+                </div>
+            </div>
+
+            <!-- Algorithm Complexity Badges -->
+            <div class="algo-badges">
+                <div class="algo-badge rr">
+                    <span class="ab-icon">🔄</span>
+                    <span class="ab-name">Round Robin</span>
+                    <span class="ab-complexity">O(1)</span>
+                </div>
+                <div class="algo-badge wlc">
+                    <span class="ab-icon">⚖️</span>
+                    <span class="ab-name">Weighted Least Connections</span>
+                    <span class="ab-complexity">O(n)</span>
+                </div>
+                <div class="algo-badge hash">
+                    <span class="ab-icon">🔗</span>
+                    <span class="ab-name">Hash-Based Routing</span>
+                    <span class="ab-complexity">O(1)*</span>
+                </div>
+            </div>
+
+            <div class="scroll-cue">
+                <span class="scroll-cue-text">استعرض النتائج</span>
+                <div class="scroll-cue-arrow">↓</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==================== Research Proposal & Plan ==================== -->
+    <section class="section" id="proposal">
+        <div class="container">
+            <div class="section-header animate-on-scroll">
+                <div class="section-label">📖 مقترح الخطة البحثية — Research Proposal & Plan</div>
+                <h2 class="section-title">الأطروحة العلمية وخطة العمل</h2>
+                <div class="divider"></div>
+            </div>
+
+            <!-- Tabbed Layout for Research Content -->
+            <div class="proposal-tabs animate-on-scroll">
+                <button class="tab-btn active" onclick="switchTab(event, 'tab-abstract')">📄 الملخص العلمي (Abstract)</button>
+                <button class="tab-btn" onclick="switchTab(event, 'tab-problem')">🔍 المشكلة الخوارزمية (Algorithmic Problem)</button>
+                <button class="tab-btn" onclick="switchTab(event, 'tab-timeline')">📅 الخطة الزمنية (Research Plan)</button>
+                <button class="tab-btn" onclick="switchTab(event, 'tab-papers')">📚 الدراسات السابقة والمراجع</button>
+            </div>
+
+            <div class="card proposal-content animate-on-scroll">
+                <!-- Abstract Tab -->
+                <div id="tab-abstract" class="tab-pane active">
+                    <h3 class="pane-title">الملخص العلمي <span class="en">Abstract</span></h3>
+                    <p class="paragraph">
+                        في النظم البرمجية القائمة على الخدمات المصغرة (Microservices)، تعد بوابة واجهة برمجة التطبيقات (API Gateway) نقطة الدخول الحيوية الوحيدة التي تدير حركة المرور المتجهة من الشمال إلى الجنوب (North/South Traffic) بين العملاء والخدمات الخلفية. نظراً لموقعها المركزي، فإن كفاءة خوارزميات توجيه الطلبات تعد عاملاً حاسماً في الأداء العام للنظام وتجنب الاختناقات الهيكلية.
+                    </p>
+                    <p class="paragraph">
+                        يستقصي هذا البحث الأسس الخوارزمية لاستراتيجيات توزيع الأحمال الأساسية، وتحديداً: 
+                        <strong class="highlight-text">Round Robin</strong>، 
+                        <strong class="highlight-text">Weighted Least Connections (WLC)</strong>، 
+                        و<strong class="highlight-text">Hash-Based Routing</strong>.
+                        الهدف الرئيسي هو سد الفجوة بين التحليل الخوارزمي النظري البحت —باستخدام ترميز Big-O— وبين الأداء التجريبي الفعلي لهذه الخوارزميات عند نشرها كبرمجيات وسيطة نشطة.
+                    </p>
+                    <p class="paragraph">
+                        من خلال التقييم الصارم لهذه الاستراتيجيات تحت أنماط حركة مرور متنوعة وديناميكية، تحدد الدراسة الآليات المثلى لتقليل زمن الاستجابة (Latency) وزيادة الإنتاجية (Throughput). في النهاية، تقدم النتائج دليلاً عملياً حاسماً لمهندسي النظم لضبط تكوينات بوابات الـ API، وتجاوز قيود التوجيه الساكن، وتلبية متطلبات الأداء العالي للبيئات القابلة للتوسع بشكل كبير.
+                    </p>
+                </div>
+
+                <!-- Problem Tab -->
+                <div id="tab-problem" class="tab-pane">
+                    <h3 class="pane-title">المشكلة الخوارزمية المحددة <span class="en">Specific Algorithmic Problem</span></h3>
+                    <div class="problem-meta-grid">
+                        <div class="meta-card">
+                            <span class="meta-label">نوع المشكلة:</span>
+                            <span class="meta-value">Comparative Study & Algorithmic Adaptation</span>
+                        </div>
+                        <div class="meta-card">
+                            <span class="meta-label">محور التحليل:</span>
+                            <span class="meta-value">Time & Space Complexity (Centralized vs Decentralized)</span>
+                        </div>
+                    </div>
+                    <p class="paragraph">
+                        يركز البحث على تعقيد الوقت والمساحة (Time & Space Complexity) لخوارزميات التوجيه على مستوى التطبيق بين النهج المركزي والنهج اللامركزي. تحديداً، يحلل البحث العبء الخوارزمي الإضافي (Overhead) لصيانة جداول التوجيه وحالات اكتشاف الخدمات في الوقت الفعلي (Space Complexity) مقابل وقت التنفيذ والتأخير الناتج عن اختيار مثيل الخدمة الأمثل (Time Complexity).
+                    </p>
+                    
+                    <div class="comparison-cards">
+                        <div class="comp-box cent">
+                            <h4>🏢 السيناريو المركزي (API Gateway)</h4>
+                            <p>يسبب اختناقاً معمارياً مركزياً نتيجة فرض قفزة شبكية إضافية (Extra Network Hop) وتراكم الطلبات في طابور واحد، لكنه يتميز بتعقيد مساحة أقل O(n) حيث يتم الاحتفاظ بحالة الجدول في مكان واحد.</p>
+                        </div>
+                        <div class="comp-box dec">
+                            <h4>🕸️ السيناريو الموزع (Service Mesh - Sidecar)</h4>
+                            <p>يوزع عبء التوجيه محلياً دون قفزات شبكية إضافية، ولكنه يعتمد على تكرار الحالة (State Replication) مما يرفع تعقيد المساحة إلى O(k × n)، بالإضافة إلى عبء المزامنة الشبكية (Gossip Traffic) وتأخير الجمود (Stale Data / Herd Effect).</p>
+                        </div>
+                    </div>
+
+                    <p class="paragraph">
+                        تقوم الدراسة بمقارنة كمية لكيفية تدرج عبء المزامنة ومنطق الاختيار مع النمو الأسي لعدد مثيلات الخدمات المصغرة (<code class="code-inline">n</code>) وحجم الطلبات المتزامنة (<code class="code-inline">m</code>).
+                    </p>
+                </div>
+
+                <!-- Timeline Tab -->
+                <div id="tab-timeline" class="tab-pane">
+                    <h3 class="pane-title">خطة العمل المقترحة <span class="en">Proposed Research Plan</span></h3>
+                    
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-badge">1</div>
+                            <div class="timeline-content">
+                                <h4>الأسبوع الأول: النمذجة النظرية ومراجعة الأدبيات</h4>
+                                <p>تطبيق مفاهيم "تحليل الخوارزميات" لنمذجة أوقات التنفيذ في الحالات الفضلى والمتوسطة والأسوأ لمنطق التوجيه رياضياً باستخدام نماذج شبكات الانتظار (Queuing Networks - QN). صياغة الفروق المعمارية بين التجميع المركزي واللامركزي.</p>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-badge">2</div>
+                            <div class="timeline-content">
+                                <h4>الأسبوع الثاني: إعداد بيئة المحاكاة المحلية</h4>
+                                <p>تطوير ونشر محاكاة خاضعة للرقابة باستخدام الحاويات الخفيفة (Docker Compose) بدلاً من منصات الأوركسترا المعقدة. تشغيل بوابة API أساسية متصلة بخدمات مصغرة خلفية لقياس تخصيص الموارد وسلوك الخوارزميات بدون أعباء بنية تحتية ثقيلة.</p>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-badge">3</div>
+                            <div class="timeline-content">
+                                <h4>الأسبوع الثالث: جمع البيانات واختبار الجهد</h4>
+                                <p>استخدام أدوات توليد الأحمال والجهد (مثل Artillery / JMeter) لقياس زمن الاستجابة الفعلي واستهلاك الذاكرة والـ CPU تحت أحمال متزايدة ومتنوعة (مثال: طلبات كثيفة القراءة مقابل عمليات مكثفة حاسوبياً). جمع البيانات لمطابقتها مع نماذج Big-O النظرية.</p>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-badge">4</div>
+                            <div class="timeline-content">
+                                <h4>الأسبوع الرابع: صياغة التقرير النهائي والاستنتاجات</h4>
+                                <p>دمج النماذج الرياضية النظرية بالنتائج التجريبية المستخلصة من بيئة المحاكاة لتوضيح كيف تملي تعقيدات الوقت والمساحة اختيار خوارزمية التوجيه المناسبة حسب النطاق (Scale)، وصياغة مبادئ توجيهية لمهندسي البرمجيات.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Related Papers Tab -->
+                <div id="tab-papers" class="tab-pane">
+                    <h3 class="pane-title">أوراق علمية ومراجع ذات صلة <span class="en">Related Papers & References</span></h3>
+                    
+                    <div class="papers-grid">
+                        <div class="paper-card">
+                            <h4>Performance Modeling and Analysis of Design Patterns for Microservice Systems</h4>
+                            <p class="paper-meta">Riccardo Pinciroli, Aldeida Aleti, Catia Trubiani (2023)</p>
+                            <p class="paper-desc">تستخدم الدراسة "شبكات الانتظار" لنمذجة الأداء وتحليل تعقيد الوقت لأنماط مثل بوابة الـ API (التجميع والتفويض)، وتوضح كيف تسبب أعباء العمل المتنوعة انتقال نقطة الاختناق (Bottleneck Switch) بين الخدمات.</p>
+                        </div>
+                        <div class="paper-card">
+                            <h4>Kubernetes Networking: Comparative Insights into API Gateways and Service Mesh Implementations</h4>
+                            <p class="paper-meta">Sami Kuikka (2024)</p>
+                            <p class="paper-desc">تقارن الأطروحة بين بوابات الـ API المركزية وشبكات الخدمات الموزعة من حيث تعقيد المساحة واستهلاك الموارد، وتناقش استخدام تقنيات (eBPF/Cilium) كبديل لنمط Sidecar لتقليل استهلاك الذاكرة.</p>
+                        </div>
+                        <div class="paper-card">
+                            <h4>AI-Powered API Management: Intelligent traffic routing and adaptive scaling</h4>
+                            <p class="paper-meta">Prasanna Kumar Natta (2025)</p>
+                            <p class="paper-desc">تبحث الورقة في كيفية استخدام الخوارزميات الديناميكية المعززة بالذكاء الاصطناعي لتحسين توجيه الطلبات في الوقت الفعلي، وتثبت خفض زمن التأخير بنسبة 24.7% مقارنة بالخوارزميات الساكنة.</p>
+                        </div>
+                        <div class="paper-card">
+                            <h4>API Gateways and Microservice Architectures</h4>
+                            <p class="paper-meta">Richard Trebichavský (2021)</p>
+                            <p class="paper-desc">توفر مرجعاً عملياً لإعداد بيئة تجريبية باستخدام أدوات فحص الجهد لقياس التأخير واستهلاك الموارد في بوابات (Kong, KrakenD)، وتقييم تكلفة القفزة الشبكية الإضافية للبوابات المركزية.</p>
+                        </div>
+                    </div>
+
+                    <div class="references-section">
+                        <h4>المراجع الأكاديمية (References)</h4>
+                        <ul class="references-list">
+                            <li>Kuikka, S. (2024). Kubernetes networking: Comparative insights into API gateways and service mesh implementations [Master’s thesis, Aalto University]. <a href="https://aaltodoc.aalto.fi/items/4ca5e5cd-83ca-46d6-8154-7ef0dad8726e" target="_blank" class="ref-link">رابط الرسالة</a></li>
+                            <li>Natta, P. K. (2025). AI-powered API management: Intelligent traffic routing and adaptive scaling. World Journal of Advanced Research and Reviews, 26(1), 2758–2764. <a href="https://doi.org/10.30574/wjarr.2025.26.1.1353" target="_blank" class="ref-link">DOI Link</a></li>
+                            <li>Pinciroli, R., & Aleti, A., & Trubiani, C. (2023). Performance modeling and analysis of design patterns for microservice systems. IEEE 20th International Conference on Software Architecture (ICSA) (pp. 35–46). <a href="https://doi.org/10.1109/ICSA56044.2023.00012" target="_blank" class="ref-link">DOI Link</a></li>
+                            <li>Trebichavský, R. (2021). API gateways and microservice architectures [Master’s thesis, Aalborg University]. <a href="https://projekter.aau.dk/projekter/files/440058300/master_thesis.pdf" target="_blank" class="ref-link">رابط الرسالة</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== Live Results Dashboard ==================== -->
+    <section class="section" id="results">
+        <div class="container">
+            <div class="section-header animate-on-scroll">
+                <div class="section-label">📊 النتائج التجريبية الحية — Live Stress Test Results</div>
+                <h2 class="section-title">لوحة قياس الأداء الفعلي</h2>
+                <div class="divider"></div>
+            </div>
+
+            <div class="status-bar animate-on-scroll">
+                <span id="statusDot" class="status-dot waiting"></span>
+                <span id="statusText">في انتظار بيانات الاختبار... قم بتشغيل اختبار الجهد أولاً.</span>
+                <span id="refreshIndicator" class="refresh-indicator">
+                    <span class="spinner"></span>
+                    تحديث تلقائي
+                </span>
+            </div>
+
+            <div class="btn-group animate-on-scroll" style="margin-bottom: 36px;">
+                <button class="btn btn-primary" id="fetchDataBtn" onclick="fetchAllData()">🔄 تحديث البيانات</button>
+                <button class="btn btn-outline" id="autoRefreshBtn" onclick="toggleAutoRefresh()">▶ تشغيل التحديث
+                    التلقائي</button>
+            </div>
+
+            <!-- Built-in + Artillery load testing -->
+            <div class="card animate-on-scroll" style="margin-bottom: 28px;">
+                <div class="card-header" style="margin-bottom: 20px;">
+                    <div class="card-icon rose">🧪</div>
+                    <div>
+                        <div class="card-title">اختبار الحمل — Load / Stress Testing</div>
+                        <div class="card-subtitle">مولّد مدمج + Artillery (read-heavy · compute-heavy · mixed)</div>
+                    </div>
+                </div>
+                <div class="simulation-controls" style="margin-bottom: 16px;">
+                    <div class="control-group">
+                        <label for="loadTestCount" class="control-label">عدد الطلبات:</label>
+                        <input type="number" id="loadTestCount" class="form-control" value="200" min="10" max="5000" style="max-width:120px">
+                    </div>
+                    <div class="control-group">
+                        <label for="loadWorkload" class="control-label">نوع الحمل:</label>
+                        <select id="loadWorkload" class="form-control">
+                            <option value="read">📖 Read-heavy (5–25ms)</option>
+                            <option value="compute">🖥️ Compute-intensive (CPU burn)</option>
+                            <option value="mixed" selected>🔀 Mixed heterogeneous</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="virtualPoolN" class="control-label">حجم المجمع الافتراضي (n):</label>
+                        <input type="number" id="virtualPoolN" class="form-control" value="1000" min="3" max="50000" style="max-width:140px">
+                        <button class="btn btn-outline btn-sm" onclick="applyVirtualPool()" style="margin-top:8px">تطبيق n</button>
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-primary" id="loadTestBtn" onclick="runBuiltInLoadTest()">🚀 تشغيل اختبار الحمل المدمج</button>
+                    <button class="btn btn-outline" onclick="runBenchmark()">📐 قياس O(n) — Benchmark</button>
+                    <button class="btn btn-outline" onclick="loadArtilleryReport()">📁 تحميل تقرير Artillery</button>
+                    <button class="btn btn-outline" onclick="exportSynthesisReport()">💾 تصدير التقرير التركيبي</button>
+                </div>
+                <div id="loadTestProgress" style="display:none; margin-top:16px;">
+                    <div style="background:rgba(148,163,184,.1); border-radius:8px; overflow:hidden; height:8px;">
+                        <div id="loadProgressBar" style="height:100%; width:0%; background:linear-gradient(90deg,#3b82f6,#06b6d4); transition:width .2s"></div>
+                    </div>
+                    <div id="loadProgressText" style="margin-top:8px; font-size:.85rem; color:#94a3b8">0 / 0</div>
+                </div>
+                <div id="benchmarkResult" class="card-subtitle" style="margin-top:12px; font-family:'JetBrains Mono',monospace; font-size:.8rem; white-space:pre-wrap;"></div>
+                <div id="artillerySummary" class="card-subtitle" style="margin-top:12px; font-size:.85rem;"></div>
+            </div>
+
+            <div class="kpi-grid animate-on-scroll">
+                <div class="card kpi-card" style="--kpi-color: var(--accent-blue);">
+                    <div class="kpi-icon">📨</div>
+                    <div class="kpi-value" id="kpiTotalRequests">0</div>
+                    <div class="kpi-label">إجمالي الطلبات</div>
+                </div>
+                <div class="card kpi-card" style="--kpi-color: var(--accent-cyan);">
+                    <div class="kpi-icon">⏱️</div>
+                    <div class="kpi-value" id="kpiAvgAlgoTime">0</div>
+                    <div class="kpi-label">متوسط زمن الخوارزمية (ms)</div>
+                </div>
+                <div class="card kpi-card" style="--kpi-color: var(--accent-emerald);">
+                    <div class="kpi-icon">🖥️</div>
+                    <div class="kpi-value" id="kpiPoolSize">0</div>
+                    <div class="kpi-label">حجم مجمع الخوادم (n)</div>
+                </div>
+                <div class="card kpi-card" style="--kpi-color: var(--accent-purple);">
+                    <div class="kpi-icon">⏲️</div>
+                    <div class="kpi-value" id="kpiUptime">0</div>
+                    <div class="kpi-label">وقت التشغيل (ثانية)</div>
+                </div>
+                <div class="card kpi-card" style="--kpi-color: var(--accent-amber);">
+                    <div class="kpi-icon">💾</div>
+                    <div class="kpi-value" id="kpiMemory">0</div>
+                    <div class="kpi-label">استهلاك الذاكرة (MB)</div>
+                </div>
+                <div class="card kpi-card" style="--kpi-color: var(--accent-rose);">
+                    <div class="kpi-icon">⚡</div>
+                    <div class="kpi-value" id="kpiCpu">0</div>
+                    <div class="kpi-label">استهلاك CPU (%)</div>
+                </div>
+                <div class="card kpi-card" style="--kpi-color: var(--accent-cyan);">
+                    <div class="kpi-icon">🖥️</div>
+                    <div class="kpi-value" id="kpiVirtualN">3</div>
+                    <div class="kpi-label">المجمع الافتراضي (n)</div>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <div class="card chart-card full-width animate-on-scroll">
+                    <div class="card-header">
+                        <div class="card-icon emerald">⏱️</div>
+                        <div>
+                            <div class="card-title">زمن تنفيذ قرار التوجيه — Algorithm Decision Time</div>
+                            <div class="card-subtitle">الزمن الفعلي لتنفيذ كل خوارزمية توجيه (بالميللي ثانية)</div>
+                        </div>
+                    </div>
+                    <div style="height: 380px;"><canvas id="algoExecutionChart"></canvas></div>
+                </div>
+
+                <div class="card chart-card animate-on-scroll">
+                    <div class="card-header">
+                        <div class="card-icon blue">📉</div>
+                        <div>
+                            <div class="card-title">توزيع زمن الاستجابة</div>
+                            <div class="card-subtitle">End-to-End Response Latency</div>
+                        </div>
+                    </div>
+                    <div style="height: 320px;"><canvas id="latencyChart"></canvas></div>
+                </div>
+
+                <div class="card chart-card animate-on-scroll">
+                    <div class="card-header">
+                        <div class="card-icon cyan">🎯</div>
+                        <div>
+                            <div class="card-title">حالة الطلبات (HTTP Codes)</div>
+                            <div class="card-subtitle">Success vs Failure Distribution</div>
+                        </div>
+                    </div>
+                    <div style="height: 320px;"><canvas id="httpCodesChart"></canvas></div>
+                </div>
+
+                <div class="card chart-card animate-on-scroll">
+                    <div class="card-header">
+                        <div class="card-icon amber">📚</div>
+                        <div>
+                            <div class="card-title">أحمال العمل المتنوعة — Workload Latency</div>
+                            <div class="card-subtitle">Read-heavy vs Compute-intensive vs Mixed</div>
+                        </div>
+                    </div>
+                    <div style="height: 320px;"><canvas id="workloadChart"></canvas></div>
+                </div>
+
+                <div class="card chart-card full-width animate-on-scroll">
+                    <div class="card-header">
+                        <div class="card-icon purple">📈</div>
+                        <div>
+                            <div class="card-title">معدل الإنتاجية عبر الزمن (Throughput)</div>
+                            <div class="card-subtitle">Requests Per Second Over Time</div>
+                        </div>
+                    </div>
+                    <div style="height: 320px;"><canvas id="rpsChart"></canvas></div>
+                </div>
+
+                <div class="card chart-card full-width animate-on-scroll">
+                    <div class="card-header">
+                        <div class="card-icon emerald">🧮</div>
+                        <div>
+                            <div class="card-title">منحنيات التعقيد النظري (Big-O)</div>
+                            <div class="card-subtitle">Theoretical Time Complexity Curves</div>
+                        </div>
+                    </div>
+                    <div style="height: 320px;"><canvas id="bigOChart"></canvas></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== Interactive Architecture Simulation ==================== -->
+    <section class="section" id="simulation">
+        <div class="container">
+            <div class="section-header animate-on-scroll">
+                <div class="section-label">🎮 محاكاة معمارية تفاعلية — Interactive Architectural Simulation</div>
+                <h2 class="section-title">مقارنة: بوابة API مقابل Service Mesh</h2>
+                <p class="card-subtitle" style="max-width:720px; margin: 12px auto 0; text-align:center; color:#94a3b8;">
+                    ⚠️ السيناريو اللامركزي (Sidecar / Service Mesh) نموذج Queuing Network نظري — وليس نشراً فعلياً لـ Istio أو Linkerd.
+                </p>
+                <div class="divider"></div>
+            </div>
+
+            <div class="card animate-on-scroll" style="margin-bottom: 28px;">
+                <div class="card-header" style="margin-bottom: 24px;">
+                    <div class="card-icon cyan">🎛️</div>
+                    <div>
+                        <div class="card-title">لوحة التحكم — Control Panel</div>
+                        <div class="card-subtitle">اضبط المتغيرات وشاهد النتائج تتغير في الوقت الفعلي</div>
+                    </div>
+                </div>
+                <div class="simulation-controls">
+                    <div class="control-group">
+                        <label for="simAlgoSelect" class="control-label">🔧 خوارزمية التوجيه النشطة:</label>
+                        <select id="simAlgoSelect" class="form-control" onchange="runSimulation()">
+                            <option value="rr">🔄 Round Robin — O(1)</option>
+                            <option value="wlc" selected>⚖️ Weighted Least Connections — O(n)</option>
+                            <option value="hash">🔗 Hash-Based Routing — O(1) amortized</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <div class="slider-header">
+                            <label for="sliderN">🖥️ حجم مجمع الخوادم (<span class="mono">n</span>):</label>
+                            <span id="valN" class="slider-val text-en">10,000</span>
+                        </div>
+                        <input type="range" id="sliderN" min="100" max="50000" step="100" value="10000"
+                            class="sim-slider" oninput="updateSliderVal('sliderN','valN'); runSimulation();">
+                    </div>
+
+                    <div class="control-group">
+                        <div class="slider-header">
+                            <label for="sliderK">🕸️ عدد وكلاء الـ Sidecars (<span class="mono">k</span>):</label>
+                            <span id="valK" class="slider-val text-en">5</span>
+                        </div>
+                        <input type="range" id="sliderK" min="2" max="20" step="1" value="5" class="sim-slider"
+                            oninput="updateSliderVal('sliderK','valK'); runSimulation();">
+                    </div>
+
+                    <div class="control-group">
+                        <div class="slider-header">
+                            <label for="sliderT">🔄 فترة مزامنة البيانات (<span class="mono">T</span>):</label>
+                            <span id="valT" class="slider-val text-en">200 ms</span>
+                        </div>
+                        <input type="range" id="sliderT" min="0" max="2000" step="50" value="200" class="sim-slider"
+                            oninput="updateSliderVal('sliderT','valT',' ms'); runSimulation();">
+                    </div>
+
+                    <div class="control-group">
+                        <div class="slider-header">
+                            <label for="sliderM">📨 معدل الطلبات الكلي (<span class="mono">m</span>):</label>
+                            <span id="valM" class="slider-val text-en">1,000 req/s</span>
+                        </div>
+                        <input type="range" id="sliderM" min="10" max="5000" step="50" value="1000" class="sim-slider"
+                            oninput="updateSliderVal('sliderM','valM',' req/s'); runSimulation();">
+                    </div>
+
+                    <div class="control-group">
+                        <div class="slider-header">
+                            <label for="sliderHop">📡 زمن القفزة الشبكية الإضافية:</label>
+                            <span id="valHop" class="slider-val text-en">15 ms</span>
+                        </div>
+                        <input type="range" id="sliderHop" min="2" max="50" step="1" value="15" class="sim-slider"
+                            oninput="updateSliderVal('sliderHop','valHop',' ms'); runSimulation();">
+                    </div>
+                </div>
+            </div>
+
+            <div class="sim-comparison-grid">
+                <div class="card sim-card cent-theme animate-on-scroll">
+                    <div class="sim-card-header">🏢 البوابة المركزية | Centralized Gateway</div>
+                    <div class="sim-telemetry">
+                        <div class="sim-telemetry-row">
+                            <span class="label">إجمالي زمن الاستجابة المتوقع</span>
+                            <span class="val highlight text-en" id="simCentTotalMs">—</span>
+                        </div>
+                        <div class="sim-telemetry-divider"></div>
+                        <div class="sim-telemetry-row mini">
+                            <span class="label">تأخير القفزة الشبكية (Hop)</span>
+                            <span class="val text-en" id="simCentHopMs">—</span>
+                        </div>
+                        <div class="sim-telemetry-row mini">
+                            <span class="label">زمن تنفيذ خوارزمية التوجيه</span>
+                            <span class="val text-en" id="simCentAlgoMs">—</span>
+                        </div>
+                        <div class="sim-telemetry-row mini">
+                            <span class="label">تأخير طابور البوابة (Queue)</span>
+                            <span class="val text-en" id="simCentQueueMs">—</span>
+                        </div>
+                        <div class="sim-telemetry-row mini">
+                            <span class="label">زمن معالجة الخادم الخلفي</span>
+                            <span class="val text-en" id="simCentBackendMs">—</span>
+                        </div>
+                        <div class="sim-telemetry-divider"></div>
+                        <div class="sim-telemetry-row">
+                            <span class="label">استهلاك الذاكرة الكلي</span>
+                            <span class="val text-en" id="simCentMemoryMB">—</span>
+                        </div>
+                        <div class="sim-telemetry-row mini">
+                            <span class="label">تعقيد المساحة</span>
+                            <span class="val text-en text-accent mono">O(n)</span>
+                        </div>
+                        <div class="sim-telemetry-divider"></div>
+                        <div class="sim-telemetry-row">
+                            <span class="label">الاختناق المرصود</span>
+                            <span class="val badge" id="simCentBottleneck">None</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card sim-card mesh-theme animate-on-scroll">
+                    <div class="sim-card-header">🕸️ الشبكة الخدمية | Decentralized Mesh</div>
+                    <div class="sim-telemetry">
+                        <div class="sim-telemetry-row">
+                            <span class="label">إجمالي زمن الاستجابة المتوقع</span>
+                            <span class="val highlight text-en" id="simDecTotalMs">—</span>
+                        </div>
+                        <div class="sim-telemetry-divider"></div>
+                        <div class="sim-telemetry-row mini">
+                            <span class="label">تأخير القفزة الشبكية</span>
+                            <span class="val text-en text-muted">0 ms (توجيه محلي)</span>
+                        </div>
+                        <div class="sim-telemetry-row mini">
+                            <span class="label">زمن تنفيذ خوارزمية التوجيه</span>
+                            <span class="val text-en" id="simDecAlgoMs">—</span>
+                        </div>
+                        <div class="sim-telemetry-row mini">
+                            <span class="label">تأخير طابور الـ Sidecar</span>
+                            <span class="val text-en" id="simDecQueueMs">—</span>
+                        </div>
+                        <div class="sim-telemetry-row mini">
+                            <span class="label">تأخير جمود البيانات (Stale)</span>
+                            <span class="val text-en" id="simDecHerdMs">—</span>
+                        </div>
+                        <div class="sim-telemetry-divider"></div>
+                        <div class="sim-telemetry-row">
+                            <span class="label">استهلاك ذاكرة الـ Cluster</span>
+                            <span class="val text-en" id="simDecMemoryMB">—</span>
+                        </div>
+                        <div class="sim-telemetry-row mini">
+                            <span class="label">تعقيد المساحة</span>
+                            <span class="val text-en text-accent mono">O(k × n)</span>
+                        </div>
+                        <div class="sim-telemetry-divider"></div>
+                        <div class="sim-telemetry-row">
+                            <span class="label">حجم Gossip Traffic</span>
+                            <span class="val text-en" id="simDecSyncOverhead">—</span>
+                        </div>
+                        <div class="sim-telemetry-divider"></div>
+                        <div class="sim-telemetry-row">
+                            <span class="label">الاختناق المرصود</span>
+                            <span class="val badge" id="simDecBottleneck">None</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="charts-grid" style="margin-top: 28px;">
+                <div class="card chart-card animate-on-scroll">
+                    <div class="card-header">
+                        <div class="card-icon blue">⏱️</div>
+                        <div>
+                            <div class="card-title">مقارنة زمن الاستجابة المتوقع</div>
+                            <div class="card-subtitle">Centralized Gateway vs Decentralized Mesh</div>
+                        </div>
+                    </div>
+                    <div style="height: 300px;"><canvas id="simLatencyChart"></canvas></div>
+                </div>
+
+                <div class="card chart-card animate-on-scroll">
+                    <div class="card-header">
+                        <div class="card-icon purple">💾</div>
+                        <div>
+                            <div class="card-title">مقارنة تعقيد الذاكرة</div>
+                            <div class="card-subtitle">O(n) مقابل O(k × n) Space Complexity</div>
+                        </div>
+                    </div>
+                    <div style="height: 300px;"><canvas id="simMemoryChart"></canvas></div>
+                </div>
+
+                <div class="card chart-card full-width animate-on-scroll">
+                    <div class="card-header">
+                        <div class="card-icon rose">📡</div>
+                        <div>
+                            <div class="card-title">تكلفة شبكة المزامنة — Gossip Overhead</div>
+                            <div class="card-subtitle">معدل رسائل تحديث الحالة بالثانية O(k² / T)</div>
+                        </div>
+                    </div>
+                    <div style="height: 250px;"><canvas id="simSyncChart"></canvas></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== System Architecture ==================== -->
+    <section class="section" id="architecture">
+        <div class="container">
+            <div class="section-header animate-on-scroll">
+                <div class="section-label">🏗️ المعمارية التجريبية — Experimental Environment</div>
+                <h2 class="section-title">بيئة الاختبار — Docker Compose</h2>
+                <div class="divider"></div>
+            </div>
+
+            <div class="card arch-diagram animate-on-scroll">
+                <div class="arch-flow">
+                    <div class="arch-node stress">
+                        <div class="arch-node-title">🧪 Load Generator</div>
+                        <div class="arch-node-detail">Artillery.io + Built-in Generator</div>
+                        <div class="arch-node-detail">read · compute · mixed workloads</div>
+                    </div>
+                    <div class="arch-arrow">→</div>
+                    <div class="arch-node client">
+                        <div class="arch-node-title">👤 Clients</div>
+                        <div class="arch-node-detail">m Concurrent Requests</div>
+                        <div class="arch-node-detail">HTTP / REST</div>
+                    </div>
+                    <div class="arch-arrow">→</div>
+                    <div class="arch-node gateway">
+                        <div class="arch-node-title">⚡ API Gateway</div>
+                        <div class="arch-node-detail">Routing Algorithms</div>
+                        <div class="arch-node-detail"
+                            style="margin-top:5px; font-size:.72rem; font-family:'JetBrains Mono',monospace;">RR O(1) ·
+                            WLC O(n) · Hash O(1)</div>
+                        <div class="arch-node-detail" style="margin-top:4px;">CPU: 0.5 · RAM: 256 MB</div>
+                    </div>
+                    <div class="arch-arrow">→</div>
+                    <div class="arch-node backend">
+                        <div class="arch-node-title">🖥️ Backend Services</div>
+                        <div class="arch-node-detail">n virtual pool (scalable)</div>
+                        <div class="arch-node-detail">3 Docker Replicas (physical)</div>
+                    </div>
+                </div>
+
+                <div class="arch-flow" style="margin-top: 16px;">
+                    <div class="arch-node client" style="min-width: 200px;">
+                        <div class="arch-node-title">📊 Frontend Dashboard</div>
+                        <div class="arch-node-detail">Nginx · Chart.js</div>
+                        <div class="arch-node-detail">Real-time Visualization</div>
+                    </div>
+                    <div class="arch-arrow">←</div>
+                    <div class="arch-node stress" style="min-width: 180px;">
+                        <div class="arch-node-title">📁 Shared Volume</div>
+                        <div class="arch-node-detail">synthesis-report.json</div>
+                        <div class="arch-node-detail">Artillery + Live Metrics</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== Footer ==================== -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-uni">🏛️ الجامعة الإسلامية بغزة — The Islamic University of Gaza</div>
+                <div class="footer-dept">كلية تكنولوجيا المعلومات — ماجستير تكنولوجيا المعلومات</div>
+                <div class="footer-dept">Advanced Algorithm Analysis And Design — تحليل وتصميم الخوارزميات المتقدمة
+                </div>
+                <div class="footer-copy">© 2026 — Muhammad Abd Al-Jawad Al-Attar · Supervised by DR. Ashraf Maghari
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+
+    <!-- Inline enhancement script: particles + nav scroll-spy -->
+    <script>
+        /* ========= Particle System ========= */
+        (function () {
+            const canvas = document.getElementById('particleCanvas');
+            const ctx = canvas.getContext('2d');
+            let W, H, particles = [];
+
+            function resize() {
+                W = canvas.width = window.innerWidth;
+                H = canvas.height = window.innerHeight;
+            }
+            resize();
+            window.addEventListener('resize', resize);
+
+            const COLORS = ['rgba(79,142,247,', 'rgba(167,139,250,', 'rgba(34,211,238,'];
+            const N = 55;
+
+            for (let i = 0; i < N; i++) {
+                particles.push({
+                    x: Math.random() * window.innerWidth,
+                    y: Math.random() * window.innerHeight,
+                    r: Math.random() * 1.5 + .4,
+                    vx: (Math.random() - .5) * .3,
+                    vy: (Math.random() - .5) * .3,
+                    color: COLORS[Math.floor(Math.random() * COLORS.length)],
+                    alpha: Math.random() * .5 + .15,
+                });
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, W, H);
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const p = particles[i], q = particles[j];
+                        const dist = Math.hypot(p.x - q.x, p.y - q.y);
+                        if (dist < 130) {
+                            ctx.beginPath();
+                            ctx.strokeStyle = `rgba(79,142,247,${.12 * (1 - dist / 130)})`;
+                            ctx.lineWidth = .6;
+                            ctx.moveTo(p.x, p.y);
+                            ctx.lineTo(q.x, q.y);
+                            ctx.stroke();
+                        }
+                    }
+                }
+                particles.forEach(p => {
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = p.color + p.alpha + ')';
+                    ctx.shadowBlur = 6;
+                    ctx.shadowColor = p.color + '.6)';
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+
+                    p.x += p.vx; p.y += p.vy;
+                    if (p.x < 0) p.x = W;
+                    if (p.x > W) p.x = 0;
+                    if (p.y < 0) p.y = H;
+                    if (p.y > H) p.y = 0;
+                });
+                requestAnimationFrame(draw);
+            }
+            draw();
+        })();
+
+        /* ========= Navbar scroll + active ========= */
+        (function () {
+            const navbar = document.getElementById('navbar');
+            const sections = ['proposal', 'results', 'simulation', 'architecture'];
+
+            window.addEventListener('scroll', () => {
+                navbar.classList.toggle('scrolled', window.scrollY > 50);
+                let current = '';
+                sections.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el && window.scrollY >= el.offsetTop - 120) current = id;
+                });
+                document.querySelectorAll('.nav-links a').forEach(a => {
+                    a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+                });
+            });
+        })();
+
+        /* ========= Proposal Tab Switcher ========= */
+        function switchTab(event, tabId) {
+            // Hide all tab panes
+            const panes = document.querySelectorAll('.tab-pane');
+            panes.forEach(pane => pane.classList.remove('active'));
+
+            // Deactivate all tab buttons
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+
+            // Show active pane and activate button
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        /* ========= Scroll-reveal ========= */
+        (function () {
+            const io = new IntersectionObserver(entries => {
+                entries.forEach(e => {
+                    if (e.isIntersecting) {
+                        e.target.classList.add('visible');
+                        io.unobserve(e.target);
+                    }
+                });
+            }, { threshold: .12 });
+            document.querySelectorAll('.animate-on-scroll').forEach(el => io.observe(el));
+        })();
+    </script>
+</body>
+
+</html>

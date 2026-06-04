@@ -1,0 +1,39 @@
+config:
+  target: "http://localhost:9090"
+  phases:
+    - duration: 15
+      arrivalRate: 3
+      name: "Warm-up"
+    - duration: 45
+      arrivalRate: 15
+      name: "Compute-intensive sustained"
+    - duration: 30
+      arrivalRate: 25
+      name: "Compute-intensive peak"
+  ensure:
+    maxErrorRate: 20
+  plugins:
+    expect: {}
+
+scenarios:
+  - name: "Round Robin — compute-heavy"
+    weight: 34
+    flow:
+      - get:
+          url: "/route/rr?workload=compute"
+          expect:
+            - statusCode: [200, 502]
+  - name: "WLC — compute-heavy"
+    weight: 33
+    flow:
+      - get:
+          url: "/route/wlc?workload=compute"
+          expect:
+            - statusCode: [200, 502]
+  - name: "Hash — compute-heavy"
+    weight: 33
+    flow:
+      - get:
+          url: "/route/hash?workload=compute"
+          expect:
+            - statusCode: [200, 502]

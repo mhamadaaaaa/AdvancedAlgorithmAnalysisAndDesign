@@ -1,0 +1,36 @@
+config:
+  target: "http://localhost:9090"
+  phases:
+    - duration: 20
+      arrivalRate: 10
+      name: "Warm-up"
+    - duration: 60
+      arrivalRate: 40
+      name: "Heterogeneous mixed load"
+  ensure:
+    maxErrorRate: 15
+  plugins:
+    expect: {}
+
+scenarios:
+  - name: "Read-heavy traffic"
+    weight: 50
+    flow:
+      - get:
+          url: "/route/rr?workload=read"
+      - get:
+          url: "/route/wlc?workload=read"
+      - get:
+          url: "/route/hash?workload=read"
+  - name: "Compute-intensive traffic"
+    weight: 30
+    flow:
+      - get:
+          url: "/route/wlc?workload=compute"
+      - get:
+          url: "/route/rr?workload=compute"
+  - name: "Mixed default workload"
+    weight: 20
+    flow:
+      - get:
+          url: "/proxy?workload=mixed"
