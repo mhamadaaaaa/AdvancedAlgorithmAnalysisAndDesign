@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Phase 3 — Stress Test Report | Routing Algorithm Analysis</title>
+  <meta name="description" content="Empirical stress test results comparing Round Robin, WLC, and Hash-Based routing algorithms across read, compute, and mixed workloads."/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    :root {
+      --bg:         #0a0e1a;
+      --surface:    #111827;
+      --card:       #1a2235;
+      --border:     #1e2d45;
+      --accent-rr:  #3b82f6;
+      --accent-wlc: #f59e0b;
+      --accent-hash:#10b981;
+      --accent-err: #ef4444;
+      --text:       #e2e8f0;
+      --text-muted: #64748b;
+      --text-dim:   #94a3b8;
+      --glow-rr:    rgba(59,130,246,0.25);
+      --glow-wlc:   rgba(245,158,11,0.25);
+      --glow-hash:  rgba(16,185,129,0.25);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Background grid ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(59,130,246,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(59,130,246,0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Header ── */
+    header {
+      position: relative;
+      z-index: 1;
+      padding: 40px 48px 32px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(59,130,246,0.06) 0%, transparent 100%);
+    }
+    .header-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(59,130,246,0.12);
+      border: 1px solid rgba(59,130,246,0.3);
+      color: var(--accent-rr);
+      font-size: 12px; font-weight: 600; letter-spacing: 0.05em;
+      padding: 4px 12px; border-radius: 999px;
+      margin-bottom: 16px;
+    }
+    .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent-rr); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    h1 { font-size: 28px; font-weight: 800; line-height: 1.3; max-width: 700px; }
+    h1 span { background: linear-gradient(135deg, var(--accent-rr), var(--accent-hash)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .header-meta { margin-top: 10px; color: var(--text-muted); font-size: 13px; display: flex; gap: 24px; flex-wrap: wrap; }
+    .header-meta b { color: var(--text-dim); }
+
+    /* ── Main layout ── */
+    main { position: relative; z-index: 1; padding: 40px 48px; max-width: 1400px; }
+
+    /* ── Status bar ── */
+    #status-bar {
+      padding: 16px 24px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 32px;
+      display: flex; align-items: center; gap: 12px;
+      font-size: 14px;
+    }
+    #status-icon { font-size: 20px; }
+    #status-msg { flex: 1; }
+    #load-btn {
+      padding: 8px 20px;
+      background: var(--accent-rr);
+      color: #fff;
+      border: none; border-radius: 8px;
+      font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: opacity .2s;
+    }
+    #load-btn:hover { opacity: 0.85; }
+
+    /* ── Section title ── */
+    .section-title {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--text-muted); margin-bottom: 16px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    /* ── KPI cards ── */
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 40px; }
+    .kpi-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px 22px;
+      transition: transform .2s, border-color .2s;
+    }
+    .kpi-card:hover { transform: translateY(-2px); border-color: rgba(59,130,246,0.4); }
+    .kpi-label { font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+    .kpi-value { font-size: 28px; font-weight: 800; font-family: 'JetBrains Mono', monospace; }
+    .kpi-sub   { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+    .kpi-rr   .kpi-value { color: var(--accent-rr); }
+    .kpi-wlc  .kpi-value { color: var(--accent-wlc); }
+    .kpi-hash .kpi-value { color: var(--accent-hash); }
+    .kpi-total .kpi-value { color: var(--text); }
+
+    /* ── Chart grid ── */
+    .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 40px; }
+    .chart-grid.single { grid-template-columns: 1fr; }
+    @media (max-width: 900px) { .chart-grid { grid-template-columns: 1fr; } }
+
+    .chart-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .chart-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--accent-rr), var(--accent-wlc), var(--accent-hash));
+      opacity: 0.6;
+    }
+    .chart-title {
+      font-size: 14px; font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .chart-sub { font-size: 12px; color: var(--text-muted); margin-bottom: 20px; }
+    .chart-wrap { position: relative; height: 280px; }
+
+    /* ── Complexity chart ── */
+    .complexity-wrap { height: 320px; }
+
+    /* ── Table ── */
+    .table-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      margin-bottom: 40px;
+    }
+    .table-header-row {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .table-title { font-size: 14px; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead th {
+      padding: 10px 16px;
+      text-align: right;
+      font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
+      color: var(--text-muted);
+      background: rgba(0,0,0,0.2);
+      border-bottom: 1px solid var(--border);
+    }
+    thead th:first-child { text-align: left; }
+    tbody tr { border-bottom: 1px solid rgba(30,45,69,0.6); transition: background .15s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: rgba(59,130,246,0.05); }
+    tbody td { padding: 11px 16px; text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; }
+    tbody td:first-child { text-align: left; font-family: 'Inter', sans-serif; }
+    .badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 2px 10px; border-radius: 999px;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.03em;
+    }
+    .badge-rr   { background: rgba(59,130,246,0.15);  color: var(--accent-rr);  }
+    .badge-wlc  { background: rgba(245,158,11,0.15);  color: var(--accent-wlc); }
+    .badge-hash { background: rgba(16,185,129,0.15);  color: var(--accent-hash); }
+    .badge-o1   { background: rgba(16,185,129,0.1);   color: var(--accent-hash); border: 1px solid rgba(16,185,129,0.3); }
+    .badge-on   { background: rgba(245,158,11,0.1);   color: var(--accent-wlc);  border: 1px solid rgba(245,158,11,0.3); }
+
+    /* ── Recommendations ── */
+    .rec-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-bottom: 40px; }
+    .rec-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+      padding: 20px 22px; display: flex; gap: 14px; align-items: flex-start;
+    }
+    .rec-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+    .rec-text { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
+    .rec-text strong { color: var(--text); display: block; margin-bottom: 4px; font-size: 13.5px; }
+
+    /* ── Footer ── */
+    footer {
+      position: relative; z-index: 1;
+      padding: 24px 48px;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      font-size: 12px; color: var(--text-muted);
+    }
+
+    /* ── Loading overlay ── */
+    #loading { display: none; text-align: center; padding: 60px; color: var(--text-muted); }
+    .spinner {
+      width: 40px; height: 40px; border: 3px solid var(--border);
+      border-top-color: var(--accent-rr);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-badge"><span class="dot"></span> Phase 3 — Live Report</div>
+  <h1>Stress Test Analysis: <span>Routing Algorithm Performance</span></h1>
+  <div class="header-meta">
+    <span><b>Author:</b> Muhammad Abd Al-Jawad Al-Attar</span>
+    <span><b>ID:</b> 120250628</span>
+    <span><b>Course:</b> Advanced Algorithm Analysis &amp; Design</span>
+    <span><b>Algorithms:</b> Round Robin · WLC · Hash-Based</span>
+  </div>
+</header>
+
+<main>
+
+  <!-- Status bar -->
+  <div id="status-bar">
+    <span id="status-icon">⏳</span>
+    <span id="status-msg">Loading report data from <code>synthesis-report.json</code> …</span>
+    <button id="load-btn" onclick="loadReport()">↺ Reload</button>
+  </div>
+
+  <div id="loading"><div class="spinner"></div><p>Loading data…</p></div>
+  <div id="content" style="display:none">
+
+    <!-- KPI Cards -->
+    <p class="section-title">Key Performance Indicators</p>
+    <div class="kpi-grid" id="kpi-grid"></div>
+
+    <!-- Charts row 1 -->
+    <p class="section-title">Latency Comparison</p>
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-title">P95 Latency by Algorithm &amp; Workload</div>
+        <div class="chart-sub">Lower is better — ms (milliseconds)</div>
+        <div class="chart-wrap"><canvas id="chart-p95"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Mean Latency Distribution</div>
+        <div class="chart-sub">Grouped by workload type</div>
+        <div class="chart-wrap"><canvas id="chart-mean"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Charts row 2 -->
+    <p class="section-title">Throughput &amp; Reliability</p>
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-title">Throughput (Requests/sec)</div>
+        <div class="chart-sub">Higher is better — sustained load</div>
+        <div class="chart-wrap"><canvas id="chart-rps"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Error Rate (%)</div>
+        <div class="chart-sub">Lower is better — 5xx + timeouts</div>
+        <div class="chart-wrap"><canvas id="chart-err"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Complexity chart (full width) -->
+    <p class="section-title">Algorithmic Complexity: O(1) vs O(n)</p>
+    <div class="chart-grid single">
+      <div class="chart-card">
+        <div class="chart-title">Algorithm Selection Time vs Pool Size n</div>
+        <div class="chart-sub">Empirical proof: WLC grows linearly (O(n)); RR &amp; Hash remain constant (O(1))</div>
+        <div class="chart-wrap complexity-wrap"><canvas id="chart-complexity"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Detailed table -->
+    <p class="section-title">Full Scenario Results</p>
+    <div class="table-card">
+      <div class="table-header-row">
+        <span class="table-title">All 9 Scenarios — Detailed Metrics</span>
+        <span id="gen-time" style="font-size:12px;color:var(--text-muted)"></span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Scenario</th>
+            <th>Complexity</th>
+            <th>Requests</th>
+            <th>RPS</th>
+            <th>Min (ms)</th>
+            <th>Mean (ms)</th>
+            <th>P95 (ms)</th>
+            <th>P99 (ms)</th>
+            <th>Err %</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+
+    <!-- Recommendations -->
+    <p class="section-title">Academic Recommendations</p>
+    <div class="rec-grid" id="rec-grid"></div>
+
+  </div><!-- /content -->
+</main>
+
+<footer>
+  Phase 3 Report &mdash; Analyzing the Complexity of Request Routing Algorithms in Microservices Architecture &mdash; 2026
+</footer>
+
+<script>
+// ─── Colors ────────────────────────────────────────────────────────
+const COLOR = {
+  RR:   { line: '#3b82f6', bg: 'rgba(59,130,246,0.18)'  },
+  WLC:  { line: '#f59e0b', bg: 'rgba(245,158,11,0.18)'  },
+  Hash: { line: '#10b981', bg: 'rgba(16,185,129,0.18)'  },
+  err:  { line: '#ef4444', bg: 'rgba(239,68,68,0.18)'   },
+};
+
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.borderColor = '#1e2d45';
+Chart.defaults.font.family = "'JetBrains Mono', monospace";
+Chart.defaults.font.size = 11;
+
+// ─── State ─────────────────────────────────────────────────────────
+let charts = {};
+
+function destroyAll() {
+  Object.values(charts).forEach(c => c.destroy());
+  charts = {};
+}
+
+// ─── Load data ─────────────────────────────────────────────────────
+async function loadReport() {
+  document.getElementById('status-msg').textContent = 'Loading …';
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('content').style.display = 'none';
+
+  let data;
+  try {
+    const res = await fetch('synthesis-report.json?' + Date.now());
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    data = await res.json();
+  } catch(e) {
+    // Try the reports sub-path
+    try {
+      const res2 = await fetch('../reports/synthesis-report.json?' + Date.now());
+      if (!res2.ok) throw new Error(`HTTP ${res2.status}`);
+      data = await res2.json();
+    } catch(e2) {
+      document.getElementById('status-icon').textContent = '❌';
+      document.getElementById('status-msg').innerHTML =
+        '<b style="color:#ef4444">Report not found.</b> Run <code style="background:#1a2235;padding:2px 6px;border-radius:4px">node scripts/stressTest.js</code> first, then reload.';
+      document.getElementById('loading').style.display = 'none';
+      return;
+    }
+  }
+
+  document.getElementById('status-icon').textContent = '✅';
+  document.getElementById('status-msg').innerHTML =
+    `Report loaded — generated <b>${new Date(data.generatedAt).toLocaleString()}</b>`;
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('content').style.display = 'block';
+
+  destroyAll();
+  renderKPIs(data);
+  renderCharts(data);
+  renderTable(data);
+  renderRecs(data);
+}
+
+// ─── KPIs ──────────────────────────────────────────────────────────
+function renderKPIs(data) {
+  const sc = data.scenarios || [];
+  const total = sc.reduce((s, r) => s + r.requests, 0);
+
+  const avgByAlgo = (algo, field) => {
+    const rows = sc.filter(s => s.algo === algo);
+    if (!rows.length) return '—';
+    const v = rows.reduce((s, r) => s + r.latencyMs[field], 0) / rows.length;
+    return v.toFixed(1) + ' ms';
+  };
+
+  const kpis = [
+    { cls: 'kpi-total', label: 'Total Requests Fired', value: total.toLocaleString(), sub: `${sc.length} scenarios` },
+    { cls: 'kpi-rr',   label: 'RR Avg P95 Latency',   value: avgByAlgo('RR',   'p95'), sub: 'O(1) — Constant' },
+    { cls: 'kpi-wlc',  label: 'WLC Avg P95 Latency',  value: avgByAlgo('WLC',  'p95'), sub: 'O(n) — Linear' },
+    { cls: 'kpi-hash', label: 'Hash Avg P95 Latency',  value: avgByAlgo('Hash', 'p95'), sub: 'O(1) — Constant' },
+  ];
+
+  const grid = document.getElementById('kpi-grid');
+  grid.innerHTML = kpis.map(k => `
+    <div class="kpi-card ${k.cls}">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value">${k.value}</div>
+      <div class="kpi-sub">${k.sub}</div>
+    </div>`).join('');
+}
+
+// ─── Charts ────────────────────────────────────────────────────────
+function renderCharts(data) {
+  const sc = data.scenarios || [];
+  const workloads = ['read', 'compute', 'mixed'];
+  const algos = ['RR', 'WLC', 'Hash'];
+
+  const get = (algo, wl, field) => {
+    const r = sc.find(s => s.algo === algo && s.workload === wl);
+    return r ? r.latencyMs[field] : 0;
+  };
+  const getRps = (algo, wl) => {
+    const r = sc.find(s => s.algo === algo && s.workload === wl);
+    return r ? r.throughputRps : 0;
+  };
+  const getErr = (algo, wl) => {
+    const r = sc.find(s => s.algo === algo && s.workload === wl);
+    return r ? r.errorRate : 0;
+  };
+
+  const baseOpts = {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'top', labels: { boxWidth: 10, padding: 16 } } },
+    scales: {
+      x: { grid: { color: 'rgba(30,45,69,0.8)' } },
+      y: { grid: { color: 'rgba(30,45,69,0.8)' }, beginAtZero: true },
+    },
+    animation: { duration: 600 },
+  };
+
+  // P95 Latency
+  charts.p95 = new Chart(document.getElementById('chart-p95'), {
+    type: 'bar',
+    data: {
+      labels: workloads,
+      datasets: algos.map(a => ({
+        label: a,
+        data: workloads.map(w => get(a, w, 'p95')),
+        backgroundColor: COLOR[a].bg,
+        borderColor: COLOR[a].line,
+        borderWidth: 2, borderRadius: 6,
+      })),
+    },
+    options: { ...baseOpts, plugins: { ...baseOpts.plugins }, scales: { ...baseOpts.scales, y: { ...baseOpts.scales.y, title: { display: true, text: 'ms' } } } },
+  });
+
+  // Mean Latency
+  charts.mean = new Chart(document.getElementById('chart-mean'), {
+    type: 'bar',
+    data: {
+      labels: workloads,
+      datasets: algos.map(a => ({
+        label: a,
+        data: workloads.map(w => get(a, w, 'mean')),
+        backgroundColor: COLOR[a].bg,
+        borderColor: COLOR[a].line,
+        borderWidth: 2, borderRadius: 6,
+      })),
+    },
+    options: { ...baseOpts, scales: { ...baseOpts.scales, y: { ...baseOpts.scales.y, title: { display: true, text: 'ms' } } } },
+  });
+
+  // Throughput RPS
+  charts.rps = new Chart(document.getElementById('chart-rps'), {
+    type: 'bar',
+    data: {
+      labels: workloads,
+      datasets: algos.map(a => ({
+        label: a,
+        data: workloads.map(w => getRps(a, w)),
+        backgroundColor: COLOR[a].bg,
+        borderColor: COLOR[a].line,
+        borderWidth: 2, borderRadius: 6,
+      })),
+    },
+    options: { ...baseOpts, scales: { ...baseOpts.scales, y: { ...baseOpts.scales.y, title: { display: true, text: 'req/s' } } } },
+  });
+
+  // Error rate
+  charts.err = new Chart(document.getElementById('chart-err'), {
+    type: 'line',
+    data: {
+      labels: workloads,
+      datasets: algos.map(a => ({
+        label: a,
+        data: workloads.map(w => getErr(a, w)),
+        borderColor: COLOR[a].line,
+        backgroundColor: COLOR[a].bg,
+        pointRadius: 5, pointHoverRadius: 7,
+        fill: false, tension: 0.3, borderWidth: 2,
+      })),
+    },
+    options: { ...baseOpts, scales: { ...baseOpts.scales, y: { ...baseOpts.scales.y, title: { display: true, text: '%' } } } },
+  });
+
+  // O(1) vs O(n) complexity
+  const bench = data.complexity?.benchmark || [];
+  if (bench.length > 0) {
+    const ns = [...new Set(bench.map(b => b.n))].sort((a,b) => a-b);
+    charts.complexity = new Chart(document.getElementById('chart-complexity'), {
+      type: 'line',
+      data: {
+        labels: ns.map(n => `n=${n}`),
+        datasets: algos.map(a => {
+          const key = a === 'RR' ? 'round-robin' : a === 'WLC' ? 'wlc' : 'hash';
+          return {
+            label: `${a} (${a === 'WLC' ? 'O(n)' : 'O(1)'})`,
+            data: ns.map(n => {
+              const row = bench.find(b => b.n === n && (b.algo === a || b.algo === key));
+              return row ? row.avgMs : null;
+            }),
+            borderColor: COLOR[a].line,
+            backgroundColor: COLOR[a].bg,
+            pointRadius: 5, pointHoverRadius: 7,
+            fill: false, tension: 0.2, borderWidth: 2.5,
+            borderDash: a === 'WLC' ? [] : [6, 3],
+          };
+        }),
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'top', labels: { boxWidth: 10, padding: 16 } } },
+        scales: {
+          x: { grid: { color: 'rgba(30,45,69,0.8)' } },
+          y: { grid: { color: 'rgba(30,45,69,0.8)' }, beginAtZero: true, title: { display: true, text: 'avg ms per selection' } },
+        },
+        animation: { duration: 800 },
+      },
+    });
+  }
+}
+
+// ─── Table ─────────────────────────────────────────────────────────
+function renderTable(data) {
+  const sc = data.scenarios || [];
+  document.getElementById('gen-time').textContent = data.generatedAt ? new Date(data.generatedAt).toLocaleString() : '';
+  const body = document.getElementById('table-body');
+  body.innerHTML = sc.map(s => {
+    const cls = s.algo.toLowerCase().replace('-', '');
+    const complexity = s.algo === 'WLC' ? '<span class="badge badge-on">O(n)</span>' : '<span class="badge badge-o1">O(1)</span>';
+    return `<tr>
+      <td><span class="badge badge-${cls}">${s.algo}</span> ${s.workload}</td>
+      <td>${complexity}</td>
+      <td>${s.requests.toLocaleString()}</td>
+      <td>${s.throughputRps}</td>
+      <td>${s.latencyMs.min}</td>
+      <td>${s.latencyMs.mean}</td>
+      <td>${s.latencyMs.p95}</td>
+      <td>${s.latencyMs.p99}</td>
+      <td style="color:${parseFloat(s.errorRate) > 5 ? '#ef4444' : '#10b981'}">${s.errorRate}%</td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── Recommendations ───────────────────────────────────────────────
+function renderRecs(data) {
+  const recs = data.recommendations || [];
+  const icons = ['⚡', '⚖️', '🏗️', '🕸️'];
+  const titles = ['Round Robin / Hash', 'Weighted Least Connections', 'Centralized API Gateway', 'Decentralized Sidecar Mesh'];
+  const grid = document.getElementById('rec-grid');
+  grid.innerHTML = recs.map((r, i) => `
+    <div class="rec-card">
+      <div class="rec-icon">${icons[i] || '📌'}</div>
+      <div class="rec-text"><strong>${titles[i] || ''}</strong>${r}</div>
+    </div>`).join('');
+}
+
+// ─── Auto-load ─────────────────────────────────────────────────────
+loadReport();
+</script>
+</body>
+</html>

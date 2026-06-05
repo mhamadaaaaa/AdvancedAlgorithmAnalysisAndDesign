@@ -4,6 +4,9 @@
   "description": "Analyzing the Complexity of Request Routing Algorithms in Microservices Architecture",
   "scripts": {
     "start": "docker compose up --build",
+    "stress": "node scripts/stressTest.js",
+    "export:csv": "node scripts/export-csv.js",
+    "phase3": "node scripts/stressTest.js && node scripts/export-csv.js",
     "test:read": "artillery run load-tests/artillery-read-heavy.yml --output reports/report-read-heavy.json",
     "test:compute": "artillery run load-tests/artillery-compute-heavy.yml --output reports/report-compute-heavy.json",
     "test:mixed": "artillery run load-tests/artillery-mixed.yml --output reports/report-mixed.json",

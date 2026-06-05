@@ -41,7 +41,7 @@ const handleRouting = async (req, res, algoOverride = null) => {
 
     const sendSuccess = (response) => {
         res.json({
-            algorithm: algoOverride === 'wlc' ? 'Weighted Least Connections' : algoOverride === 'rr' ? 'Round Robin' : algoOverride === 'hash' ? 'Hash-Based Routing' : routingModel.getAlgorithm(),
+            algorithm: algoOverride === 'wlc' ? 'Weighted Least Connections' : algoOverride === 'round-robin' ? 'Round Robin' : algoOverride === 'hash' ? 'Hash-Based Routing' : routingModel.getAlgorithm(),
             complexity: algo === 'wlc' ? 'O(n)' : 'O(1)',
             workload,
             serverId: targetNode.id,
@@ -60,18 +60,9 @@ const handleRouting = async (req, res, algoOverride = null) => {
         sendSuccess(response);
     } catch (error) {
         routingModel.recordError(algoKey);
-        try {
-            const localUrl = backendUrl
-                .replace('service1', 'localhost')
-                .replace('service2', 'localhost')
-                .replace('service3', 'localhost');
-            const response = await axios.get(localUrl, { timeout: 5000 });
-            sendSuccess(response);
-        } catch (err) {
-            routingModel.recordHttpCode(502);
-            routingModel.recordResponseTime(performance.now() - reqStart, workload);
-            res.status(502).json({ error: 'Bad Gateway. Node unavailable.', node: targetNode.name, workload });
-        }
+        routingModel.recordHttpCode(502);
+        routingModel.recordResponseTime(performance.now() - reqStart, workload);
+        res.status(502).json({ error: 'Bad Gateway. Node unavailable.', node: targetNode.name, workload, details: error.message });
     }
 };
 
@@ -266,13 +257,7 @@ exports.syncMetricsInBackground = async () => {
             const response = await axios.get(`${node.url}/metrics`, { timeout: 1500 });
             node.activeConnections = response.data.activeConnections;
         } catch (err) {
-            try {
-                const localUrl = node.url.replace('service1', 'localhost').replace('service2', 'localhost').replace('service3', 'localhost');
-                const response = await axios.get(`${localUrl}/metrics`, { timeout: 1500 });
-                node.activeConnections = response.data.activeConnections;
-            } catch (e) {
-                // Node offline
-            }
+            // Node offline
         }
     }
 };

@@ -1,0 +1,4 @@
+Workload,RR Throughput (rps),RR P95 (ms),WLC Throughput (rps),WLC P95 (ms),Hash Throughput (rps),Hash P95 (ms)
+read,249.53,122.584,258.91,119.236,296.47,93.625
+compute,86.52,308.981,55.43,518.428,53.93,479.114
+mixed,186.27,280.023,195.91,270.172,195,272.507

@@ -7,11 +7,24 @@ class RoutingModel {
         this.currentAlgorithm = 'round-robin';
         this.rrIndex = 0;
         this.virtualPoolSize = 3;
-        this.nodes = [
-            { id: 0, name: 'Service_Node_A', url: 'http://service1:3001', weight: 1, activeConnections: 0, totalRequests: 0 },
-            { id: 1, name: 'Service_Node_B', url: 'http://service2:3002', weight: 2, activeConnections: 0, totalRequests: 0 },
-            { id: 2, name: 'Service_Node_C', url: 'http://service3:3003', weight: 3, activeConnections: 0, totalRequests: 0 }
-        ];
+        const servicesEnv = process.env.SERVICES;
+        if (servicesEnv) {
+            const urls = servicesEnv.split(',');
+            this.nodes = urls.map((url, i) => ({
+                id: i,
+                name: `Service_Node_${String.fromCharCode(65 + i)}`,
+                url: url.trim(),
+                weight: i + 1,
+                activeConnections: 0,
+                totalRequests: 0
+            }));
+        } else {
+            this.nodes = [
+                { id: 0, name: 'Service_Node_A', url: 'http://service1:3001', weight: 1, activeConnections: 0, totalRequests: 0 },
+                { id: 1, name: 'Service_Node_B', url: 'http://service2:3002', weight: 2, activeConnections: 0, totalRequests: 0 },
+                { id: 2, name: 'Service_Node_C', url: 'http://service3:3003', weight: 3, activeConnections: 0, totalRequests: 0 }
+            ];
+        }
 
         this.MAX_SAMPLES = 1000;
         this.startTime = Date.now();

@@ -1,0 +1,300 @@
+{
+  "generatedAt": "2026-06-05T12:48:10.162Z",
+  "scenarios": [
+    {
+      "label": "Round-Robin   | read",
+      "url": "/route/rr?workload=read",
+      "algo": "RR",
+      "workload": "read",
+      "requests": 590,
+      "errors": 0,
+      "throughputRps": "39.31",
+      "durationSec": "15.0",
+      "latencyMs": {
+        "min": "225.809",
+        "max": "1391.688",
+        "mean": "499.353",
+        "median": "436.387",
+        "p75": "564.528",
+        "p95": "902.676",
+        "p99": "1165.410"
+      },
+      "statusCodes": {
+        "200": 610
+      },
+      "errorRate": "0.00"
+    },
+    {
+      "label": "Round-Robin   | compute",
+      "url": "/route/rr?workload=compute",
+      "algo": "RR",
+      "workload": "compute",
+      "requests": 311,
+      "errors": 0,
+      "throughputRps": "20.71",
+      "durationSec": "15.0",
+      "latencyMs": {
+        "min": "172.897",
+        "max": "2530.771",
+        "mean": "934.389",
+        "median": "611.008",
+        "p75": "1464.920",
+        "p95": "2102.371",
+        "p99": "2422.014"
+      },
+      "statusCodes": {
+        "200": 331
+      },
+      "errorRate": "0.00"
+    },
+    {
+      "label": "Round-Robin   | mixed",
+      "url": "/route/rr?workload=mixed",
+      "algo": "RR",
+      "workload": "mixed",
+      "requests": 648,
+      "errors": 0,
+      "throughputRps": "43.17",
+      "durationSec": "15.0",
+      "latencyMs": {
+        "min": "132.226",
+        "max": "1042.150",
+        "mean": "457.474",
+        "median": "444.808",
+        "p75": "566.841",
+        "p95": "737.789",
+        "p99": "845.834"
+      },
+      "statusCodes": {
+        "200": 668
+      },
+      "errorRate": "0.00"
+    },
+    {
+      "label": "WLC           | read",
+      "url": "/route/wlc?workload=read",
+      "algo": "WLC",
+      "workload": "read",
+      "requests": 738,
+      "errors": 0,
+      "throughputRps": "49.18",
+      "durationSec": "15.0",
+      "latencyMs": {
+        "min": "148.024",
+        "max": "798.280",
+        "mean": "401.093",
+        "median": "388.399",
+        "p75": "472.706",
+        "p95": "625.599",
+        "p99": "665.988"
+      },
+      "statusCodes": {
+        "200": 758
+      },
+      "errorRate": "0.00"
+    },
+    {
+      "label": "WLC           | compute",
+      "url": "/route/wlc?workload=compute",
+      "algo": "WLC",
+      "workload": "compute",
+      "requests": 231,
+      "errors": 0,
+      "throughputRps": "15.38",
+      "durationSec": "15.0",
+      "latencyMs": {
+        "min": "280.366",
+        "max": "3459.473",
+        "mean": "1186.934",
+        "median": "1021.131",
+        "p75": "1382.479",
+        "p95": "2591.564",
+        "p99": "3417.093"
+      },
+      "statusCodes": {
+        "200": 250
+      },
+      "errorRate": "0.00"
+    },
+    {
+      "label": "WLC           | mixed",
+      "url": "/route/wlc?workload=mixed",
+      "algo": "WLC",
+      "workload": "mixed",
+      "requests": 1,
+      "errors": 80,
+      "throughputRps": "0.07",
+      "durationSec": "15.0",
+      "latencyMs": {
+        "min": "4695.489",
+        "max": "4695.489",
+        "mean": "4695.489",
+        "median": "4695.489",
+        "p75": "4695.489",
+        "p95": "4695.489",
+        "p99": "4695.489"
+      },
+      "statusCodes": {
+        "200": 1
+      },
+      "errorRate": "98.77"
+    },
+    {
+      "label": "Hash-Based    | read",
+      "url": "/route/hash?workload=read",
+      "algo": "Hash",
+      "workload": "read",
+      "requests": 0,
+      "errors": 80,
+      "throughputRps": "0.00",
+      "durationSec": "15.0",
+      "latencyMs": {
+        "min": 0,
+        "max": 0,
+        "mean": "0.000",
+        "median": "0.000",
+        "p75": "0.000",
+        "p95": "0.000",
+        "p99": "0.000"
+      },
+      "statusCodes": {},
+      "errorRate": "0.00"
+    },
+    {
+      "label": "Hash-Based    | compute",
+      "url": "/route/hash?workload=compute",
+      "algo": "Hash",
+      "workload": "compute",
+      "requests": 0,
+      "errors": 80,
+      "throughputRps": "0.00",
+      "durationSec": "15.0",
+      "latencyMs": {
+        "min": 0,
+        "max": 0,
+        "mean": "0.000",
+        "median": "0.000",
+        "p75": "0.000",
+        "p95": "0.000",
+        "p99": "0.000"
+      },
+      "statusCodes": {},
+      "errorRate": "0.00"
+    },
+    {
+      "label": "Hash-Based    | mixed",
+      "url": "/route/hash?workload=mixed",
+      "algo": "Hash",
+      "workload": "mixed",
+      "requests": 214,
+      "errors": 40,
+      "throughputRps": "14.26",
+      "durationSec": "15.0",
+      "latencyMs": {
+        "min": "117.364",
+        "max": "4803.191",
+        "mean": "853.402",
+        "median": "414.749",
+        "p75": "681.932",
+        "p95": "4726.074",
+        "p99": "4783.177"
+      },
+      "statusCodes": {
+        "200": 234
+      },
+      "errorRate": "15.75"
+    }
+  ],
+  "benchmark": [
+    {
+      "n": 10,
+      "algo": "round-robin",
+      "avgMs": 0.03939473994076252
+    },
+    {
+      "n": 10,
+      "algo": "wlc",
+      "avgMs": 0.03903469996526837
+    },
+    {
+      "n": 10,
+      "algo": "hash",
+      "avgMs": 0.059649679977446794
+    },
+    {
+      "n": 100,
+      "algo": "round-robin",
+      "avgMs": 0.706669579995796
+    },
+    {
+      "n": 100,
+      "algo": "wlc",
+      "avgMs": 0.7907424700446427
+    },
+    {
+      "n": 100,
+      "algo": "hash",
+      "avgMs": 0.3793772099725902
+    },
+    {
+      "n": 500,
+      "algo": "round-robin",
+      "avgMs": 2.8858426099922507
+    },
+    {
+      "n": 500,
+      "algo": "wlc",
+      "avgMs": 5.22966244998388
+    },
+    {
+      "n": 500,
+      "algo": "hash",
+      "avgMs": 3.1809558099973945
+    },
+    {
+      "n": 1000,
+      "algo": "round-robin",
+      "avgMs": 5.109709980003536
+    },
+    {
+      "n": 1000,
+      "algo": "wlc",
+      "avgMs": 9.183460119999944
+    },
+    {
+      "n": 1000,
+      "algo": "hash",
+      "avgMs": 7.764332969998941
+    },
+    {
+      "n": 2000,
+      "algo": "round-robin",
+      "avgMs": 14.604106659945101
+    },
+    {
+      "n": 2000,
+      "algo": "wlc",
+      "avgMs": 15.21958104996942
+    },
+    {
+      "n": 2000,
+      "algo": "hash",
+      "avgMs": 10.439934180006384
+    },
+    {
+      "n": 5000,
+      "algo": "round-robin",
+      "avgMs": 27.740314399991185
+    },
+    {
+      "n": 5000,
+      "algo": "wlc",
+      "avgMs": 34.061030730018395
+    },
+    {
+      "n": 5000,
+      "algo": "hash",
+      "avgMs": 44.75346320999786
+    }
+  ]
+}
