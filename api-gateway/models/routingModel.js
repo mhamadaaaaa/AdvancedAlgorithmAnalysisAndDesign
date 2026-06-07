@@ -62,7 +62,7 @@ class RoutingModel {
     }
 
     setVirtualPoolSize(n) {
-        const size = Math.max(this.nodes.length, Math.min(parseInt(n, 10) || this.nodes.length, 50000));
+        const size = Math.max(this.nodes.length, Math.min(parseInt(n, 10) || this.nodes.length, 200000));
         this.virtualPoolSize = size;
         return this.virtualPoolSize;
     }

@@ -1,28 +1,12 @@
 
-
-
 services:
-  gateway:
-    image: node:18-alpine
-    command: sh -c "npm install express axios && node server.js"
-    ports:
-      - "9090:8080"
-    volumes:
-      - ./api-gateway:/usr/src/app
-      - ./reports:/usr/src/reports
-    working_dir: /usr/src/app
-    environment:
-      - NODE_ENV=production
-    depends_on:
-      - service1
-      - service2
-      - service3
-    networks:
-      - load-balancer-net
 
+  # ──────────────────────────────────────────────────────────────────
+  #  1. Microservice nodes (3 replicas with different weights)
+  # ──────────────────────────────────────────────────────────────────
   service1:
     image: node:18-alpine
-    command: sh -c "npm install express && node server.js"
+    command: sh -c "npm install --prefer-offline 2>/dev/null; node server.js"
     ports:
       - "3001:3001"
     environment:
@@ -34,10 +18,16 @@ services:
     working_dir: /usr/src/app
     networks:
       - load-balancer-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3001/ || exit 0"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   service2:
     image: node:18-alpine
-    command: sh -c "npm install express && node server.js"
+    command: sh -c "npm install --prefer-offline 2>/dev/null; node server.js"
     ports:
       - "3002:3002"
     environment:
@@ -49,10 +39,16 @@ services:
     working_dir: /usr/src/app
     networks:
       - load-balancer-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3002/ || exit 0"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   service3:
     image: node:18-alpine
-    command: sh -c "npm install express && node server.js"
+    command: sh -c "npm install --prefer-offline 2>/dev/null; node server.js"
     ports:
       - "3003:3003"
     environment:
@@ -64,6 +60,169 @@ services:
     working_dir: /usr/src/app
     networks:
       - load-balancer-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3003/ || exit 0"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ──────────────────────────────────────────────────────────────────
+  #  2. API Gateway  →  http://localhost:9090
+  # ──────────────────────────────────────────────────────────────────
+  gateway:
+    image: node:18-alpine
+    command: sh -c "npm install --prefer-offline 2>/dev/null; node server.js"
+    ports:
+      - "9090:8080"
+    volumes:
+      - ./api-gateway:/usr/src/app
+      - ./reports:/usr/src/reports
+    working_dir: /usr/src/app
+    environment:
+      - NODE_ENV=production
+      - PORT=8080
+      - SERVICES=http://service1:3001,http://service2:3002,http://service3:3003
+    depends_on:
+      service1:
+        condition: service_started
+      service2:
+        condition: service_started
+      service3:
+        condition: service_started
+    networks:
+      - load-balancer-net
+    restart: unless-stopped
+
+  # ──────────────────────────────────────────────────────────────────
+  #  3. stress  →  npm run stress  (one-shot, exits when done)
+  #     docker-compose run --rm stress
+  # ──────────────────────────────────────────────────────────────────
+  stress:
+    image: node:18-alpine
+    command: >
+      sh -c "
+        echo '⏳ Waiting 15 s for gateway to be ready…' &&
+        sleep 15 &&
+        npm install --prefer-offline 2>/dev/null &&
+        node scripts/stressTest.js
+      "
+    volumes:
+      - ./:/usr/src/app
+      - ./reports:/usr/src/app/reports
+    working_dir: /usr/src/app
+    environment:
+      - GATEWAY_URL=http://gateway:8080
+    depends_on:
+      - gateway
+    networks:
+      - load-balancer-net
+    profiles:
+      - tools
+
+  # ──────────────────────────────────────────────────────────────────
+  #  4. export-csv  →  npm run export:csv  (one-shot)
+  #     docker-compose run --rm export-csv
+  # ──────────────────────────────────────────────────────────────────
+  export-csv:
+    image: node:18-alpine
+    command: sh -c "npm install --prefer-offline 2>/dev/null; node scripts/export-csv.js"
+    volumes:
+      - ./:/usr/src/app
+      - ./reports:/usr/src/app/reports
+    working_dir: /usr/src/app
+    networks:
+      - load-balancer-net
+    profiles:
+      - tools
+
+  # ──────────────────────────────────────────────────────────────────
+  #  5. phase3  →  npm run phase3  (stress + export-csv in sequence)
+  #     docker-compose run --rm phase3
+  # ──────────────────────────────────────────────────────────────────
+  phase3:
+    image: node:18-alpine
+    command: >
+      sh -c "
+        echo '⏳ Waiting 15 s for gateway to be ready…' &&
+        sleep 15 &&
+        npm install --prefer-offline 2>/dev/null &&
+        node scripts/stressTest.js &&
+        node scripts/export-csv.js
+      "
+    volumes:
+      - ./:/usr/src/app
+      - ./reports:/usr/src/app/reports
+    working_dir: /usr/src/app
+    environment:
+      - GATEWAY_URL=http://gateway:8080
+    depends_on:
+      - gateway
+    networks:
+      - load-balancer-net
+    profiles:
+      - tools
+
+  # ──────────────────────────────────────────────────────────────────
+  #  6. test-read   →  npm run test:read
+  #     docker-compose run --rm test-read
+  # ──────────────────────────────────────────────────────────────────
+  test-read:
+    image: artilleryio/artillery:latest
+    command: >
+      run /tests/artillery-read-heavy.yml
+      --output /reports/report-read-heavy.json
+    volumes:
+      - ./load-tests:/tests
+      - ./reports:/reports
+    environment:
+      - TARGET=http://gateway:8080
+    depends_on:
+      - gateway
+    networks:
+      - load-balancer-net
+    profiles:
+      - tools
+
+  # ──────────────────────────────────────────────────────────────────
+  #  7. test-compute  →  npm run test:compute
+  # ──────────────────────────────────────────────────────────────────
+  test-compute:
+    image: artilleryio/artillery:latest
+    command: >
+      run /tests/artillery-compute-heavy.yml
+      --output /reports/report-compute-heavy.json
+    volumes:
+      - ./load-tests:/tests
+      - ./reports:/reports
+    environment:
+      - TARGET=http://gateway:8080
+    depends_on:
+      - gateway
+    networks:
+      - load-balancer-net
+    profiles:
+      - tools
+
+  # ──────────────────────────────────────────────────────────────────
+  #  8. test-mixed  →  npm run test:mixed
+  # ──────────────────────────────────────────────────────────────────
+  test-mixed:
+    image: artilleryio/artillery:latest
+    command: >
+      run /tests/artillery-mixed.yml
+      --output /reports/report-mixed.json
+    volumes:
+      - ./load-tests:/tests
+      - ./reports:/reports
+    environment:
+      - TARGET=http://gateway:8080
+    depends_on:
+      - gateway
+    networks:
+      - load-balancer-net
+    profiles:
+      - tools
 
 networks:
   load-balancer-net:

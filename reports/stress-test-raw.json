@@ -1,26 +1,26 @@
 {
-  "generatedAt": "2026-06-05T12:48:10.162Z",
+  "generatedAt": "2026-06-06T20:36:05.982Z",
   "scenarios": [
     {
       "label": "Round-Robin   | read",
       "url": "/route/rr?workload=read",
       "algo": "RR",
       "workload": "read",
-      "requests": 590,
+      "requests": 863,
       "errors": 0,
-      "throughputRps": "39.31",
+      "throughputRps": "57.46",
       "durationSec": "15.0",
       "latencyMs": {
-        "min": "225.809",
-        "max": "1391.688",
-        "mean": "499.353",
-        "median": "436.387",
-        "p75": "564.528",
-        "p95": "902.676",
-        "p99": "1165.410"
+        "min": "128.738",
+        "max": "554.595",
+        "mean": "342.794",
+        "median": "340.549",
+        "p75": "382.316",
+        "p95": "470.290",
+        "p99": "510.845"
       },
       "statusCodes": {
-        "200": 610
+        "200": 883
       },
       "errorRate": "0.00"
     },
@@ -29,21 +29,21 @@
       "url": "/route/rr?workload=compute",
       "algo": "RR",
       "workload": "compute",
-      "requests": 311,
+      "requests": 627,
       "errors": 0,
-      "throughputRps": "20.71",
+      "throughputRps": "41.73",
       "durationSec": "15.0",
       "latencyMs": {
-        "min": "172.897",
-        "max": "2530.771",
-        "mean": "934.389",
-        "median": "611.008",
-        "p75": "1464.920",
-        "p95": "2102.371",
-        "p99": "2422.014"
+        "min": "184.115",
+        "max": "1129.021",
+        "mean": "475.148",
+        "median": "466.403",
+        "p75": "535.191",
+        "p95": "694.592",
+        "p99": "947.152"
       },
       "statusCodes": {
-        "200": 331
+        "200": 647
       },
       "errorRate": "0.00"
     },
@@ -52,21 +52,21 @@
       "url": "/route/rr?workload=mixed",
       "algo": "RR",
       "workload": "mixed",
-      "requests": 648,
+      "requests": 1344,
       "errors": 0,
-      "throughputRps": "43.17",
+      "throughputRps": "89.57",
       "durationSec": "15.0",
       "latencyMs": {
-        "min": "132.226",
-        "max": "1042.150",
-        "mean": "457.474",
-        "median": "444.808",
-        "p75": "566.841",
-        "p95": "737.789",
-        "p99": "845.834"
+        "min": "22.678",
+        "max": "608.403",
+        "mean": "219.544",
+        "median": "188.941",
+        "p75": "302.364",
+        "p95": "426.552",
+        "p99": "536.515"
       },
       "statusCodes": {
-        "200": 668
+        "200": 1364
       },
       "errorRate": "0.00"
     },
@@ -75,21 +75,21 @@
       "url": "/route/wlc?workload=read",
       "algo": "WLC",
       "workload": "read",
-      "requests": 738,
+      "requests": 946,
       "errors": 0,
-      "throughputRps": "49.18",
+      "throughputRps": "63.08",
       "durationSec": "15.0",
       "latencyMs": {
-        "min": "148.024",
-        "max": "798.280",
-        "mean": "401.093",
-        "median": "388.399",
-        "p75": "472.706",
-        "p95": "625.599",
-        "p99": "665.988"
+        "min": "148.213",
+        "max": "651.698",
+        "mean": "314.418",
+        "median": "303.239",
+        "p75": "336.330",
+        "p95": "422.341",
+        "p99": "602.363"
       },
       "statusCodes": {
-        "200": 758
+        "200": 966
       },
       "errorRate": "0.00"
     },
@@ -98,21 +98,21 @@
       "url": "/route/wlc?workload=compute",
       "algo": "WLC",
       "workload": "compute",
-      "requests": 231,
+      "requests": 388,
       "errors": 0,
-      "throughputRps": "15.38",
+      "throughputRps": "25.85",
       "durationSec": "15.0",
       "latencyMs": {
-        "min": "280.366",
-        "max": "3459.473",
-        "mean": "1186.934",
-        "median": "1021.131",
-        "p75": "1382.479",
-        "p95": "2591.564",
-        "p99": "3417.093"
+        "min": "169.989",
+        "max": "1261.081",
+        "mean": "759.998",
+        "median": "806.106",
+        "p75": "936.221",
+        "p95": "1057.051",
+        "p99": "1203.627"
       },
       "statusCodes": {
-        "200": 250
+        "200": 408
       },
       "errorRate": "0.00"
     },
@@ -121,43 +121,45 @@
       "url": "/route/wlc?workload=mixed",
       "algo": "WLC",
       "workload": "mixed",
-      "requests": 1,
-      "errors": 80,
-      "throughputRps": "0.07",
+      "requests": 858,
+      "errors": 0,
+      "throughputRps": "57.20",
       "durationSec": "15.0",
       "latencyMs": {
-        "min": "4695.489",
-        "max": "4695.489",
-        "mean": "4695.489",
-        "median": "4695.489",
-        "p75": "4695.489",
-        "p95": "4695.489",
-        "p99": "4695.489"
+        "min": "56.670",
+        "max": "1405.380",
+        "mean": "346.468",
+        "median": "302.696",
+        "p75": "410.390",
+        "p95": "545.943",
+        "p99": "1236.111"
       },
       "statusCodes": {
-        "200": 1
+        "200": 878
       },
-      "errorRate": "98.77"
+      "errorRate": "0.00"
     },
     {
       "label": "Hash-Based    | read",
       "url": "/route/hash?workload=read",
       "algo": "Hash",
       "workload": "read",
-      "requests": 0,
-      "errors": 80,
-      "throughputRps": "0.00",
+      "requests": 1064,
+      "errors": 0,
+      "throughputRps": "70.91",
       "durationSec": "15.0",
       "latencyMs": {
-        "min": 0,
-        "max": 0,
-        "mean": "0.000",
-        "median": "0.000",
-        "p75": "0.000",
-        "p95": "0.000",
-        "p99": "0.000"
+        "min": "154.027",
+        "max": "760.013",
+        "mean": "280.100",
+        "median": "265.119",
+        "p75": "291.617",
+        "p95": "388.259",
+        "p99": "696.958"
       },
-      "statusCodes": {},
+      "statusCodes": {
+        "200": 1084
+      },
       "errorRate": "0.00"
     },
     {
@@ -165,20 +167,22 @@
       "url": "/route/hash?workload=compute",
       "algo": "Hash",
       "workload": "compute",
-      "requests": 0,
-      "errors": 80,
-      "throughputRps": "0.00",
+      "requests": 326,
+      "errors": 0,
+      "throughputRps": "21.72",
       "durationSec": "15.0",
       "latencyMs": {
-        "min": 0,
-        "max": 0,
-        "mean": "0.000",
-        "median": "0.000",
-        "p75": "0.000",
-        "p95": "0.000",
-        "p99": "0.000"
+        "min": "522.762",
+        "max": "1573.599",
+        "mean": "896.469",
+        "median": "856.648",
+        "p75": "995.507",
+        "p95": "1356.120",
+        "p99": "1470.672"
       },
-      "statusCodes": {},
+      "statusCodes": {
+        "200": 346
+      },
       "errorRate": "0.00"
     },
     {
@@ -186,115 +190,115 @@
       "url": "/route/hash?workload=mixed",
       "algo": "Hash",
       "workload": "mixed",
-      "requests": 214,
-      "errors": 40,
-      "throughputRps": "14.26",
+      "requests": 986,
+      "errors": 0,
+      "throughputRps": "65.70",
       "durationSec": "15.0",
       "latencyMs": {
-        "min": "117.364",
-        "max": "4803.191",
-        "mean": "853.402",
-        "median": "414.749",
-        "p75": "681.932",
-        "p95": "4726.074",
-        "p99": "4783.177"
+        "min": "42.491",
+        "max": "971.941",
+        "mean": "300.830",
+        "median": "266.103",
+        "p75": "373.329",
+        "p95": "494.113",
+        "p99": "759.279"
       },
       "statusCodes": {
-        "200": 234
+        "200": 1006
       },
-      "errorRate": "15.75"
+      "errorRate": "0.00"
     }
   ],
   "benchmark": [
     {
       "n": 10,
       "algo": "round-robin",
-      "avgMs": 0.03939473994076252
+      "avgMs": 0.05773012999678031,
+      "complexity": "O(1)"
     },
     {
       "n": 10,
       "algo": "wlc",
-      "avgMs": 0.03903469996526837
+      "avgMs": 0.0775688899983652,
+      "complexity": "O(n)"
     },
     {
       "n": 10,
       "algo": "hash",
-      "avgMs": 0.059649679977446794
+      "avgMs": 0.1980099700158462,
+      "complexity": "O(1)"
     },
     {
       "n": 100,
       "algo": "round-robin",
-      "avgMs": 0.706669579995796
+      "avgMs": 0.8834033800219185,
+      "complexity": "O(1)"
     },
     {
       "n": 100,
       "algo": "wlc",
-      "avgMs": 0.7907424700446427
+      "avgMs": 0.9905729900277219,
+      "complexity": "O(n)"
     },
     {
       "n": 100,
       "algo": "hash",
-      "avgMs": 0.3793772099725902
-    },
-    {
-      "n": 500,
-      "algo": "round-robin",
-      "avgMs": 2.8858426099922507
-    },
-    {
-      "n": 500,
-      "algo": "wlc",
-      "avgMs": 5.22966244998388
-    },
-    {
-      "n": 500,
-      "algo": "hash",
-      "avgMs": 3.1809558099973945
+      "avgMs": 1.1139657300012187,
+      "complexity": "O(1)"
     },
     {
       "n": 1000,
       "algo": "round-robin",
-      "avgMs": 5.109709980003536
+      "avgMs": 3.5919009500113317,
+      "complexity": "O(1)"
     },
     {
       "n": 1000,
       "algo": "wlc",
-      "avgMs": 9.183460119999944
+      "avgMs": 5.229728889984544,
+      "complexity": "O(n)"
     },
     {
       "n": 1000,
       "algo": "hash",
-      "avgMs": 7.764332969998941
+      "avgMs": 3.644705049996264,
+      "complexity": "O(1)"
     },
     {
-      "n": 2000,
+      "n": 10000,
       "algo": "round-robin",
-      "avgMs": 14.604106659945101
+      "avgMs": 37.39942770001478,
+      "complexity": "O(1)"
     },
     {
-      "n": 2000,
+      "n": 10000,
       "algo": "wlc",
-      "avgMs": 15.21958104996942
+      "avgMs": 43.0876641599997,
+      "complexity": "O(n)"
     },
     {
-      "n": 2000,
+      "n": 10000,
       "algo": "hash",
-      "avgMs": 10.439934180006384
+      "avgMs": 45.614145629992706,
+      "complexity": "O(1)"
     },
     {
-      "n": 5000,
+      "n": 100000,
       "algo": "round-robin",
-      "avgMs": 27.740314399991185
+      "avgMs": 389.4065134200035,
+      "complexity": "O(1)"
     },
     {
-      "n": 5000,
+      "n": 100000,
       "algo": "wlc",
-      "avgMs": 34.061030730018395
+      "avgMs": 356.4510980100138,
+      "complexity": "O(n)"
     },
     {
-      "n": 5000,
+      "n": 100000,
       "algo": "hash",
-      "avgMs": 44.75346320999786
+      "avgMs": 216.6576926499838,
+      "complexity": "O(1)"
     }
   ]
 }

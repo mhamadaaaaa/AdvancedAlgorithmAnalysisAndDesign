@@ -298,11 +298,12 @@
                             <option value="read">📖 Read-heavy (5–25ms)</option>
                             <option value="compute">🖥️ Compute-intensive (CPU burn)</option>
                             <option value="mixed" selected>🔀 Mixed heterogeneous</option>
+                            <option value="all">⚡ All Algorithms — نفس الحمل (مقارنة)</option>
                         </select>
                     </div>
                     <div class="control-group">
                         <label for="virtualPoolN" class="control-label">حجم المجمع الافتراضي (n):</label>
-                        <input type="number" id="virtualPoolN" class="form-control" value="1000" min="3" max="50000" style="max-width:140px">
+                        <input type="number" id="virtualPoolN" class="form-control" value="1000" min="3" max="200000" style="max-width:140px">
                         <button class="btn btn-outline btn-sm" onclick="applyVirtualPool()" style="margin-top:8px">تطبيق n</button>
                     </div>
                 </div>
@@ -311,12 +312,18 @@
                     <button class="btn btn-outline" onclick="runBenchmark()">📐 قياس O(n) — Benchmark</button>
                     <button class="btn btn-outline" onclick="loadArtilleryReport()">📁 تحميل تقرير Artillery</button>
                     <button class="btn btn-outline" onclick="exportSynthesisReport()">💾 تصدير التقرير التركيبي</button>
+                    <button class="btn btn-outline" onclick="loadStressReport()" style="background:rgba(16,185,129,0.12); border-color:#10b981; color:#10b981;">📈 عرض نتائج Stress Test</button>
                 </div>
                 <div id="loadTestProgress" style="display:none; margin-top:16px;">
                     <div style="background:rgba(148,163,184,.1); border-radius:8px; overflow:hidden; height:8px;">
                         <div id="loadProgressBar" style="height:100%; width:0%; background:linear-gradient(90deg,#3b82f6,#06b6d4); transition:width .2s"></div>
                     </div>
                     <div id="loadProgressText" style="margin-top:8px; font-size:.85rem; color:#94a3b8">0 / 0</div>
+                </div>
+                <!-- All-algo comparison panel (shown when workload=all) -->
+                <div id="allAlgoPanel" style="display:none; margin-top:20px;">
+                    <div style="font-size:.8rem; font-weight:600; color:#94a3b8; text-transform:uppercase; letter-spacing:.06em; margin-bottom:12px;">📊 نتائج المقارنة الفورية — نفس الحمل على الخوارزميات الثلاث</div>
+                    <div id="allAlgoGrid" style="display:grid; grid-template-columns:repeat(3,1fr); gap:14px;"></div>
                 </div>
                 <div id="benchmarkResult" class="card-subtitle" style="margin-top:12px; font-family:'JetBrains Mono',monospace; font-size:.8rem; white-space:pre-wrap;"></div>
                 <div id="artillerySummary" class="card-subtitle" style="margin-top:12px; font-size:.85rem;"></div>
@@ -358,6 +365,16 @@
                     <div class="kpi-value" id="kpiVirtualN">3</div>
                     <div class="kpi-label">المجمع الافتراضي (n)</div>
                 </div>
+            </div>
+
+            <!-- Stress Report KPI Panel (loaded from synthesis-report.json) -->
+            <div id="stressReportPanel" style="display:none; margin-bottom:28px;" class="animate-on-scroll">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+                    <div style="font-size:.8rem; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.07em;">📈 نتائج Stress Test — مستوردة من synthesis-report.json</div>
+                    <div id="stressReportMeta" style="font-size:.75rem; color:#64748b;"></div>
+                </div>
+                <div id="stressReportKpis" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; margin-bottom:16px;"></div>
+                <div id="stressReportTable" style="overflow-x:auto;"></div>
             </div>
 
             <div class="charts-grid">
@@ -465,7 +482,7 @@
                             <label for="sliderN">🖥️ حجم مجمع الخوادم (<span class="mono">n</span>):</label>
                             <span id="valN" class="slider-val text-en">10,000</span>
                         </div>
-                        <input type="range" id="sliderN" min="100" max="50000" step="100" value="10000"
+                        <input type="range" id="sliderN" min="100" max="200000" step="100" value="10000"
                             class="sim-slider" oninput="updateSliderVal('sliderN','valN'); runSimulation();">
                     </div>
 

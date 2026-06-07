@@ -280,15 +280,33 @@ async function runBuiltInLoadTest() {
   const progressText = document.getElementById('loadProgressText');
   const progressWrap = document.getElementById('loadTestProgress');
   const totalRequests = parseInt(document.getElementById('loadTestCount').value, 10) || 100;
-  const workload = document.getElementById('loadWorkload')?.value || 'mixed';
+  const workloadSel = document.getElementById('loadWorkload')?.value || 'mixed';
   const virtualN = parseInt(document.getElementById('virtualPoolN')?.value, 10) || 1000;
   const CONCURRENCY = 8;
+
+  // Hide all-algo panel if not in 'all' mode
+  const allPanel = document.getElementById('allAlgoPanel');
+  if (allPanel) allPanel.style.display = workloadSel === 'all' ? 'block' : 'none';
 
   await applyVirtualPool(virtualN);
 
   if (btn) { btn.disabled = true; btn.textContent = '⏳ جاري الاختبار...'; }
   if (progressWrap) progressWrap.style.display = 'block';
   if (progressBar) progressBar.style.width = '0%';
+
+  // ── "All" mode: run all 3 algorithms on all 3 workloads ─
+  if (workloadSel === 'all') {
+    if (progressText) progressText.textContent = '⚡ تشغيل المقارنة على الخوارزميات الثلاث (read · compute · mixed)…';
+    await runAllAlgosComparison(['read', 'compute', 'mixed'], virtualN, totalRequests);
+    isLoadTestRunning = false;
+    if (btn) { btn.disabled = false; btn.textContent = '🚀 تشغيل اختبار الحمل المدمج'; }
+    if (progressText) progressText.textContent = '✅ اكتملت المقارنة! الخوارزميات الثلاث — read · compute · mixed';
+    setTimeout(fetchAllData, 500);
+    return;
+  }
+
+  // ── Normal single-workload mode ─────────────────────────────────
+  const workload = workloadSel;
   if (progressText) progressText.textContent = '0 / ' + totalRequests + ' طلب (' + workload + ')';
 
   const endpoints = [
@@ -383,6 +401,352 @@ async function exportSynthesisReport() {
   }
 }
 
+/* ================================================================
+ * Load & display synthesis-report.json results in the KPI panel
+ * ================================================================ */
+async function loadStressReport() {
+  const panel = document.getElementById('stressReportPanel');
+  const kpisEl = document.getElementById('stressReportKpis');
+  const tableEl = document.getElementById('stressReportTable');
+  const metaEl = document.getElementById('stressReportMeta');
+
+  if (!panel) return;
+
+  // ── Priority 1: live results from "All Algorithms" run ──
+  if (window._liveStressResults) {
+    _renderLiveStressPanel(window._liveStressResults, panel, kpisEl, tableEl, metaEl);
+    panel.style.display = 'block';
+    panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
+
+  // ── Priority 2: try synthesis-report.json ──────────────────────
+  let data = null;
+  for (const url of ['/reports/synthesis-report.json', '/reports/report.json', '/api/synthesis-report']) {
+    try {
+      const res = await fetch(url + '?' + Date.now());
+      if (res.ok) { data = await res.json(); break; }
+    } catch(e) { /* try next */ }
+  }
+
+  if (!data || !data.scenarios) {
+    kpisEl.innerHTML = '<div style="color:#f59e0b; padding:16px; font-size:.85rem;">&#x26A0;&#xFE0F; لا يوجد تقرير بعد. شغّل اختبار <b>All Algorithms</b> أولاً لتوليد نتائج فعلية.</div>';
+    panel.style.display = 'block';
+    return;
+  }
+
+  // Metadata
+  if (metaEl && data.generatedAt) {
+    metaEl.textContent = 'Generated: ' + new Date(data.generatedAt).toLocaleString();
+  }
+
+  // KPI cards from scenarios
+  const sc = data.scenarios || [];
+  const total = sc.reduce((s, r) => s + r.requests, 0);
+  const avgByAlgo = (algo, field) => {
+    const rows = sc.filter(s => s.algo === algo);
+    if (!rows.length) return '—';
+    return (rows.reduce((s, r) => s + r.latencyMs[field], 0) / rows.length).toFixed(1) + ' ms';
+  };
+  const avgRps = (algo) => {
+    const rows = sc.filter(s => s.algo === algo);
+    if (!rows.length) return '—';
+    return (rows.reduce((s, r) => s + r.throughputRps, 0) / rows.length).toFixed(1) + ' rps';
+  };
+
+  const ALGO_COLOR = { RR: '#3b82f6', WLC: '#f59e0b', Hash: '#10b981' };
+  const kpiDefs = [
+    { label: 'إجمالي الطلبات', value: total.toLocaleString(), sub: sc.length + ' سيناريو', color: '#8b5cf6' },
+    { label: 'RR — P95 Latency', value: avgByAlgo('RR', 'p95'), sub: 'O(1) · Avg RPS: ' + avgRps('RR'), color: ALGO_COLOR.RR },
+    { label: 'WLC — P95 Latency', value: avgByAlgo('WLC', 'p95'), sub: 'O(n) · Avg RPS: ' + avgRps('WLC'), color: ALGO_COLOR.WLC },
+    { label: 'Hash — P95 Latency', value: avgByAlgo('Hash', 'p95'), sub: 'O(1) · Avg RPS: ' + avgRps('Hash'), color: ALGO_COLOR.Hash },
+  ];
+
+  kpisEl.innerHTML = kpiDefs.map(k => `
+    <div style="background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:16px 18px; border-top:3px solid ${k.color};">
+      <div style="font-size:10px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:#64748b; margin-bottom:6px;">${k.label}</div>
+      <div style="font-size:24px; font-weight:800; font-family:'JetBrains Mono',monospace; color:${k.color};">${k.value}</div>
+      <div style="font-size:11px; color:#64748b; margin-top:3px;">${k.sub}</div>
+    </div>`).join('');
+
+  // Detailed table
+  const COMPLEXITY = { RR: '<span style="background:rgba(16,185,129,.15);color:#10b981;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700">O(1)</span>', WLC: '<span style="background:rgba(245,158,11,.15);color:#f59e0b;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700">O(n)</span>', Hash: '<span style="background:rgba(16,185,129,.15);color:#10b981;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700">O(1)</span>' };
+  tableEl.innerHTML = `
+    <table style="width:100%;border-collapse:collapse;font-size:12.5px;font-family:'JetBrains Mono',monospace;">
+      <thead>
+        <tr style="background:rgba(0,0,0,.25);">
+          <th style="padding:9px 12px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#64748b;border-bottom:1px solid rgba(255,255,255,.06);">Scenario</th>
+          <th style="padding:9px 12px;text-align:center;color:#64748b;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.06);">Complexity</th>
+          <th style="padding:9px 12px;text-align:right;color:#64748b;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.06);">Requests</th>
+          <th style="padding:9px 12px;text-align:right;color:#64748b;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.06);">RPS</th>
+          <th style="padding:9px 12px;text-align:right;color:#64748b;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.06);">P95 (ms)</th>
+          <th style="padding:9px 12px;text-align:right;color:#64748b;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.06);">P99 (ms)</th>
+          <th style="padding:9px 12px;text-align:right;color:#64748b;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.06);">Err%</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${sc.map(s => {
+          const color = ALGO_COLOR[s.algo] || '#94a3b8';
+          const errColor = parseFloat(s.errorRate) > 5 ? '#ef4444' : '#10b981';
+          return `<tr style="border-bottom:1px solid rgba(255,255,255,.04);">
+            <td style="padding:9px 12px;text-align:left;"><span style="background:${color}22;color:${color};padding:2px 9px;border-radius:999px;font-size:10px;font-weight:700;">${s.algo}</span> ${s.workload}</td>
+            <td style="padding:9px 12px;text-align:center;">${COMPLEXITY[s.algo] || ''}</td>
+            <td style="padding:9px 12px;text-align:right;">${s.requests.toLocaleString()}</td>
+            <td style="padding:9px 12px;text-align:right;">${s.throughputRps}</td>
+            <td style="padding:9px 12px;text-align:right;color:#f1f5f9;">${s.latencyMs.p95}</td>
+            <td style="padding:9px 12px;text-align:right;color:#f1f5f9;">${s.latencyMs.p99}</td>
+            <td style="padding:9px 12px;text-align:right;color:${errColor};">${s.errorRate}%</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
+
+  panel.style.display = 'block';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* ================================================================
+ * Helper: render scenario table (shared between live + JSON modes)
+ * ================================================================ */
+function _renderScenarioTable(sc, tableEl, AC) {
+  const CX = {
+    RR:   '<span style="background:rgba(16,185,129,.15);color:#10b981;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700">O(1)</span>',
+    WLC:  '<span style="background:rgba(245,158,11,.15);color:#f59e0b;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700">O(n)</span>',
+    Hash: '<span style="background:rgba(16,185,129,.15);color:#10b981;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700">O(1)</span>'
+  };
+  tableEl.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:12.5px;font-family:'JetBrains Mono',monospace;">
+    <thead><tr style="background:rgba(0,0,0,.25);">
+      <th style="padding:9px 12px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b;border-bottom:1px solid rgba(255,255,255,.06);">Scenario</th>
+      <th style="padding:9px 12px;text-align:center;color:#64748b;font-size:10px;font-weight:700;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.06);">Complexity</th>
+      <th style="padding:9px 12px;text-align:right;color:#64748b;font-size:10px;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.06);">Requests</th>
+      <th style="padding:9px 12px;text-align:right;color:#64748b;font-size:10px;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.06);">RPS</th>
+      <th style="padding:9px 12px;text-align:right;color:#64748b;font-size:10px;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.06);">Mean (ms)</th>
+      <th style="padding:9px 12px;text-align:right;color:#64748b;font-size:10px;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.06);">P95 (ms)</th>
+      <th style="padding:9px 12px;text-align:right;color:#64748b;font-size:10px;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.06);">P99 (ms)</th>
+      <th style="padding:9px 12px;text-align:right;color:#64748b;font-size:10px;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.06);">Err%</th>
+      <th style="padding:9px 12px;text-align:center;color:#64748b;font-size:10px;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.06);">${'\u062d\u0627\u0644\u0629'}</th>
+    </tr></thead>
+    <tbody>
+      ${sc.map(s => {
+        const c = AC[s.algo] || '#94a3b8';
+        const ec = parseFloat(s.errorRate) > 5 ? '#ef4444' : '#10b981';
+        const p95 = parseFloat(s.p95 ?? s.latencyMs?.p95 ?? 0);
+        const p99 = parseFloat(s.p99 ?? s.latencyMs?.p99 ?? 0);
+        const mean = parseFloat(s.mean ?? s.latencyMs?.mean ?? 0);
+        const rps = s.rps ?? s.throughputRps ?? '\u2014';
+        const req = s.requests;
+        const btl = p95 > 500 || parseFloat(s.errorRate) > 10;
+        return `<tr style="border-bottom:1px solid rgba(255,255,255,.04);${btl ? 'background:rgba(239,68,68,.08);' : ''}">
+          <td style="padding:9px 12px;text-align:left;"><span style="background:${c}22;color:${c};padding:2px 9px;border-radius:999px;font-size:10px;font-weight:700;">${s.algo}</span> ${s.workload}</td>
+          <td style="padding:9px 12px;text-align:center;">${CX[s.algo] || ''}</td>
+          <td style="padding:9px 12px;text-align:right;">${req != null ? (typeof req === 'number' ? req.toLocaleString() : req) : '\u2014'}</td>
+          <td style="padding:9px 12px;text-align:right;">${rps}</td>
+          <td style="padding:9px 12px;text-align:right;color:#f1f5f9;">${mean.toFixed(2)}</td>
+          <td style="padding:9px 12px;text-align:right;color:${p95>300?'#ef4444':'#f1f5f9'};font-weight:${p95>300?700:400};">${p95.toFixed(2)}</td>
+          <td style="padding:9px 12px;text-align:right;color:#f1f5f9;">${p99.toFixed(2)}</td>
+          <td style="padding:9px 12px;text-align:right;color:${ec};">${s.errorRate}%</td>
+          <td style="padding:9px 12px;text-align:center;">${btl ? '\uD83D\uDD34 <span style="font-size:9px;color:#ef4444;font-weight:700;">Bottleneck</span>' : '\uD83D\uDFE2'}</td>
+        </tr>`;
+      }).join('')}
+    </tbody></table>`;
+}
+
+/* ================================================================
+ * Helper: render stress panel from live computed results
+ * ================================================================ */
+function _renderLiveStressPanel(live, panel, kpisEl, tableEl, metaEl) {
+  const { allResults, summaries, COLORS } = live;
+  const AC = { RR: COLORS.RR, WLC: COLORS.WLC, Hash: COLORS.Hash };
+  if (metaEl) metaEl.textContent = '\u26A1 \u0646\u062a\u0627\u0626\u062c \u0641\u0639\u0644\u064a\u0629 \u2014 ' + new Date().toLocaleString();
+  kpisEl.innerHTML = ['RR','WLC','Hash'].map(a => {
+    const s = summaries[a]; const c = AC[a];
+    return `<div style="background:${s.hasBottleneck?'rgba(239,68,68,.12)':'rgba(255,255,255,.03)'};border:1px solid ${s.hasBottleneck?'#ef4444':'rgba(255,255,255,.08)'};border-radius:12px;padding:16px 18px;border-top:3px solid ${s.hasBottleneck?'#ef4444':c};">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b;margin-bottom:6px;">${a} \u2014 P95 Latency ${s.hasBottleneck?'\uD83D\uDD34':''}</div>
+      <div style="font-size:24px;font-weight:800;font-family:'JetBrains Mono',monospace;color:${s.hasBottleneck?'#ef4444':c};">${s.avgP95} ms</div>
+      <div style="font-size:11px;color:#64748b;margin-top:3px;">${a==='WLC'?'O(n)':'O(1)'} \u00b7 RPS: ${s.avgRps}${s.hasBottleneck?' \u00b7 <b style="color:#ef4444">\u0639\u0646\u0642 \u0632\u062c\u0627\u062c\u0629!</b>':''}</div>
+    </div>`;
+  }).join('');
+  const sc = [];
+  ['RR','WLC','Hash'].forEach(a => {
+    allResults[a].forEach(r => sc.push({ algo:a, workload:r.workload, requests:null, rps:r.rps, mean:r.mean, p95:r.p95, p99:r.p99, errorRate:r.errorRate }));
+  });
+  _renderScenarioTable(sc, tableEl, AC);
+}
+
+/* Store live results for use by loadStressReport */
+function renderAllAlgoStressPanel(allResults, summaries, workloads, COLORS) {
+  window._liveStressResults = { allResults, summaries, workloads, COLORS };
+}
+
+/* ================================================================
+ * All workload mode — run all 3 workloads on all 3 algorithms
+ * and show a side-by-side comparison panel
+ * ================================================================ */
+async function runAllAlgosComparison(workloads, virtualN, totalRequests) {
+  const panel = document.getElementById('allAlgoPanel');
+  const grid  = document.getElementById('allAlgoGrid');
+  if (!panel || !grid) return;
+
+  panel.style.display = 'block';
+  const COLORS = { RR: '#3b82f6', WLC: '#f59e0b', Hash: '#10b981' };
+  const ROUTES = { RR: 'rr', WLC: 'wlc', Hash: 'hash' };
+  const ALGOS = ['RR', 'WLC', 'Hash'];
+
+  // ── Initial skeleton with per-algo progress bars ──────────────────
+  grid.innerHTML = ALGOS.map(a => `
+    <div id="allCard-${a}" style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:16px;transition:background .4s,border-color .4s;">
+      <div style="font-size:12px;font-weight:700;color:${COLORS[a]};margin-bottom:10px;">
+        ${a === 'RR' ? '🔄 Round Robin' : a === 'WLC' ? '⚖️ WLC' : '🔗 Hash'}
+        <span style="font-size:9px;color:#64748b;font-weight:500;margin-right:6px;">${a === 'WLC' ? 'O(n)' : 'O(1)'}</span>
+      </div>
+      <div style="font-size:10px;color:#64748b;margin-bottom:6px;">التقدم الكلي</div>
+      <div style="background:rgba(148,163,184,.12);border-radius:6px;overflow:hidden;height:6px;margin-bottom:4px;">
+        <div id="prog-total-${a}" style="height:100%;width:0%;background:${COLORS[a]};transition:width .3s;"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:8px;">
+        ${workloads.map(w => `
+          <div style="text-align:center;">
+            <div style="font-size:9px;color:#64748b;margin-bottom:3px;">${w}</div>
+            <div style="background:rgba(148,163,184,.1);border-radius:4px;overflow:hidden;height:4px;">
+              <div id="prog-${a}-${w}" style="height:100%;width:0%;background:${COLORS[a]};transition:width .2s;"></div>
+            </div>
+          </div>`).join('')}
+      </div>
+      <div id="card-status-${a}" style="font-size:10px;color:#64748b;margin-top:8px;text-align:center;">⏳ في الانتظار…</div>
+    </div>`).join('');
+
+  // ── Test one algo on one workload ─────────────────────────────────
+  const testAlgoWorkload = async (algoKey, workload, reqCount) => {
+    const route = ROUTES[algoKey];
+    const ep = `/route/${route}?workload=${workload}&n=${virtualN}`;
+    const latencies = [];
+    let success = 0, errors = 0;
+    const BATCH = 8;
+    const perBatch = Math.ceil(reqCount / BATCH);
+    const progEl = document.getElementById(`prog-${algoKey}-${workload}`);
+    for (let b = 0; b < BATCH; b++) {
+      const batchPs = Array.from({ length: perBatch }, async () => {
+        const t0 = performance.now();
+        try { await fetch(ep); success++; } catch(e) { errors++; }
+        latencies.push(performance.now() - t0);
+      });
+      await Promise.all(batchPs);
+      if (progEl) progEl.style.width = Math.round(((b + 1) / BATCH) * 100) + '%';
+      await new Promise(r => setTimeout(r, 20));
+    }
+    const elapsed = Math.max(0.001, (latencies.length > 0 ? latencies.reduce((s,v)=>s+v,0)/1000 : 1));
+    const sorted = latencies.slice().sort((a, b) => a - b);
+    const pct = p => sorted[Math.max(0, Math.floor(p / 100 * sorted.length) - 1)] || 0;
+    return {
+      workload,
+      rps: (latencies.length / elapsed).toFixed(1),
+      mean: sorted.length ? (sorted.reduce((s, v) => s + v, 0) / sorted.length).toFixed(2) : '0.00',
+      p95:  pct(95).toFixed(2),
+      p99:  pct(99).toFixed(2),
+      errorRate: ((errors / Math.max(1, success + errors)) * 100).toFixed(1),
+    };
+  };
+
+  // ── Run each algo sequentially across all workloads ───────────────
+  const allResults = {};
+  const reqPerWorkload = Math.ceil(totalRequests / workloads.length);
+
+  for (const algoKey of ALGOS) {
+    const statusEl = document.getElementById(`card-status-${algoKey}`);
+    const totalProg = document.getElementById(`prog-total-${algoKey}`);
+    const card = document.getElementById(`allCard-${algoKey}`);
+    if (statusEl) statusEl.textContent = '🔄 يعمل…';
+    if (card) card.style.borderColor = COLORS[algoKey] + '88';
+
+    const workloadResults = [];
+    for (let wi = 0; wi < workloads.length; wi++) {
+      const w = workloads[wi];
+      if (statusEl) statusEl.textContent = `🔄 ${w}…`;
+      const res = await testAlgoWorkload(algoKey, w, reqPerWorkload);
+      workloadResults.push(res);
+      if (totalProg) totalProg.style.width = Math.round(((wi + 1) / workloads.length) * 100) + '%';
+    }
+    allResults[algoKey] = workloadResults;
+    if (statusEl) statusEl.textContent = '✅ اكتمل';
+  }
+
+  // ── Aggregate & detect bottlenecks ───────────────────────────────
+  const aggregate = (algoKey) => {
+    const rows = allResults[algoKey];
+    const avgRps  = (rows.reduce((s,r) => s + parseFloat(r.rps),  0) / rows.length).toFixed(1);
+    const avgMean = (rows.reduce((s,r) => s + parseFloat(r.mean), 0) / rows.length).toFixed(2);
+    const avgP95  = (rows.reduce((s,r) => s + parseFloat(r.p95),  0) / rows.length).toFixed(2);
+    const avgP99  = (rows.reduce((s,r) => s + parseFloat(r.p99),  0) / rows.length).toFixed(2);
+    const avgErr  = (rows.reduce((s,r) => s + parseFloat(r.errorRate), 0) / rows.length).toFixed(1);
+    const hasBottleneck = parseFloat(avgP95) > 500 || parseFloat(avgErr) > 10;
+    return { avgRps, avgMean, avgP95, avgP99, avgErr, hasBottleneck, rows };
+  };
+
+  const summaries = {};
+  ALGOS.forEach(a => { summaries[a] = aggregate(a); });
+
+  // Find winner (lowest avgP95)
+  const winner = ALGOS.reduce((best, a) =>
+    parseFloat(summaries[a].avgP95) < parseFloat(summaries[best].avgP95) ? a : best, ALGOS[0]);
+
+  // ── Render final cards ────────────────────────────────────────────
+  ALGOS.forEach(algoKey => {
+    const s = summaries[algoKey];
+    const color = COLORS[algoKey];
+    const isWinner = algoKey === winner;
+    const card = document.getElementById('allCard-' + algoKey);
+    if (!card) return;
+
+    // Bottleneck → red background
+    if (s.hasBottleneck) {
+      card.style.background = 'rgba(239,68,68,0.12)';
+      card.style.borderColor = '#ef4444';
+      card.style.borderTopColor = '#ef4444';
+    } else {
+      card.style.background = isWinner ? 'rgba(16,185,129,0.07)' : 'rgba(255,255,255,.03)';
+      card.style.borderColor = color + '88';
+      card.style.borderTopColor = color;
+    }
+    card.style.borderTopWidth = '3px';
+
+    const bottleneckHtml = s.hasBottleneck
+      ? `<div style="grid-column:1/-1;background:rgba(239,68,68,.2);border:1px solid #ef4444;border-radius:6px;padding:5px 8px;font-size:10px;color:#ef4444;font-weight:700;">⚠️ عنق زجاجة مرصود — P95: ${s.avgP95}ms · Error: ${s.avgErr}%</div>`
+      : '';
+
+    const perWorkloadRows = s.rows.map(r => `
+      <div style="grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;
+                  background:rgba(255,255,255,.03);border-radius:6px;padding:4px 8px;margin-top:3px;font-size:10px;">
+        <span style="color:#94a3b8;font-weight:600;">${r.workload}</span>
+        <span style="color:#e2e8f0;font-family:'JetBrains Mono',monospace;">RPS: <b style="color:${color};">${r.rps}</b>  P95: <b>${r.p95}ms</b>  Err: <b style="color:${parseFloat(r.errorRate)>5?'#ef4444':'#10b981'}">${r.errorRate}%</b></span>
+      </div>`).join('');
+
+    card.innerHTML = `
+      <div style="font-size:12px;font-weight:700;color:${s.hasBottleneck ? '#ef4444' : color};margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">
+        <span>${algoKey === 'RR' ? '🔄 Round Robin' : algoKey === 'WLC' ? '⚖️ WLC' : '🔗 Hash'}
+          <span style="font-size:9px;color:#64748b;font-weight:500;margin-right:4px;">${algoKey === 'WLC' ? 'O(n)' : 'O(1)'}</span>
+        </span>
+        <span>${isWinner ? '🏆' : ''} ${s.hasBottleneck ? '🔴' : ''}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;text-align:left;">
+        ${bottleneckHtml}
+        <div style="font-size:10px;color:#64748b;">RPS (متوسط)</div>
+        <div style="font-size:13px;font-weight:700;font-family:'JetBrains Mono',monospace;color:${color};">${s.avgRps}</div>
+        <div style="font-size:10px;color:#64748b;">Mean (ms)</div>
+        <div style="font-size:12px;font-family:'JetBrains Mono',monospace;color:#e2e8f0;">${s.avgMean}</div>
+        <div style="font-size:10px;color:#64748b;">P95 (ms)</div>
+        <div style="font-size:12px;font-family:'JetBrains Mono',monospace;color:${parseFloat(s.avgP95)>300?'#ef4444':'#f1f5f9'};">${s.avgP95}</div>
+        <div style="font-size:10px;color:#64748b;">P99 (ms)</div>
+        <div style="font-size:12px;font-family:'JetBrains Mono',monospace;color:#e2e8f0;">${s.avgP99}</div>
+        <div style="font-size:10px;color:#64748b;">Error%</div>
+        <div style="font-size:12px;font-family:'JetBrains Mono',monospace;color:${parseFloat(s.avgErr)>5?'#ef4444':'#10b981'};">${s.avgErr}%</div>
+        ${perWorkloadRows}
+      </div>`;
+  });
+
+  // ── Push computed results into the stress report panel ───────────
+  renderAllAlgoStressPanel(allResults, summaries, workloads, COLORS);
+}
+
 function renderWorkloadChart(md) {
   const ctx = document.getElementById('workloadChart');
   if (!ctx) return;
@@ -423,7 +787,7 @@ function renderBigOChart() {
   if (!ctx) return;
   if (charts.bigO) charts.bigO.destroy();
 
-  const ns = [100, 500, 1000, 2500, 5000, 7500, 10000, 25000, 50000];
+  const ns = [100, 1000, 5000, 10000, 25000, 50000, 100000, 200000];
   const labels = ns.map(n => n >= 1000 ? (n / 1000) + 'K' : String(n));
 
   charts.bigO = new Chart(ctx, {

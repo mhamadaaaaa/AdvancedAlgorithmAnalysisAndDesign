@@ -65,19 +65,19 @@ function spawnProcess(label, cmd, args, cwd, env = {}) {
   return proc;
 }
 
-function waitForPort(port, retries = 30, delayMs = 1000) {
+function waitForPort(port, retries = 30, delayMs = 1000, hostname = 'localhost') {
   return new Promise((resolve, reject) => {
     let tries = 0;
     const attempt = () => {
-      const req = http.get(`http://localhost:${port}/`, (res) => {
+      const req = http.get(`http://${hostname}:${port}/`, (res) => {
         resolve();
       });
       req.on('error', () => {
         tries++;
-        if (tries >= retries) return reject(new Error(`Port ${port} not ready after ${retries} tries`));
+        if (tries >= retries) return reject(new Error(`${hostname}:${port} not ready after ${retries} tries`));
         setTimeout(attempt, delayMs);
       });
-      req.setTimeout(800, () => { req.destroy(); });
+      req.setTimeout(1500, () => { req.destroy(); });
     };
     attempt();
   });
@@ -165,14 +165,15 @@ function runAutocannon(url, durationSec, connections) {
 }
 
 // ── Benchmark: measure algo selection time at various n ───────────
+// ── Benchmark: measure algo selection time at various n ───────────
 async function runBenchmark() {
   log('Running O(1) vs O(n) benchmark via /api/benchmark …');
-  const sizes = [10, 100, 500, 1000, 2000, 5000];
+  const sizes = [10, 100, 1000, 10000, 100000];
   const rows = [];
   for (const n of sizes) {
     try {
       const data = await new Promise((resolve, reject) => {
-        http.get(`${GATEWAY_URL}/api/benchmark?n=${n}&iterations=100`, res => {
+        http.get(`${EFFECTIVE_GATEWAY}/api/benchmark?n=${n}&iterations=100`, res => {
           let body = ''; res.on('data', d => body += d);
           res.on('end', () => { try { resolve(JSON.parse(body)); } catch(e) { reject(e); } });
         }).on('error', reject);
@@ -189,7 +190,7 @@ async function runBenchmark() {
 // ── Fetch live metrics ─────────────────────────────────────────────
 async function fetchMetrics() {
   return new Promise((resolve) => {
-    http.get(`${GATEWAY_URL}/api/metrics`, res => {
+    http.get(`${EFFECTIVE_GATEWAY}/api/metrics`, res => {
       let body = ''; res.on('data', d => body += d);
       res.on('end', () => { try { resolve(JSON.parse(body)); } catch(e) { resolve(null); } });
     }).on('error', () => resolve(null));
@@ -202,6 +203,11 @@ function toCSV(headers, rows) {
   return [headers.join(','), ...rows.map(r => headers.map(h => escape(r[h])).join(','))].join('\n');
 }
 
+// ── Detect Docker mode ─────────────────────────────────────────────
+// If GATEWAY_URL env is set, services are already running (Docker mode)
+const DOCKER_MODE = !!process.env.GATEWAY_URL;
+const EFFECTIVE_GATEWAY = process.env.GATEWAY_URL || GATEWAY_URL;
+
 // ── Main ───────────────────────────────────────────────────────────
 async function main() {
   if (!fs.existsSync(REPORTS_DIR)) fs.mkdirSync(REPORTS_DIR, { recursive: true });
@@ -211,48 +217,66 @@ async function main() {
   console.log('║   Muhammad Abd Al-Jawad Al-Attar — 120250628     ║');
   console.log('╚══════════════════════════════════════════════════╝\x1b[0m\n');
 
-  // ── 1. Start microservices ─────────────────────────────────────
-  log('Starting 3 microservice nodes …');
-  const svcProcs = [];
-  const svcEnvs = [
-    { PORT: '3001', SERVICE_NAME: 'Service_Node_A', WEIGHT: '1' },
-    { PORT: '3002', SERVICE_NAME: 'Service_Node_B', WEIGHT: '2' },
-    { PORT: '3003', SERVICE_NAME: 'Service_Node_C', WEIGHT: '3' },
-  ];
-  for (const env of svcEnvs) {
-    svcProcs.push(spawnProcess(`svc-${env.PORT}`, 'node', ['server.js'], SVC_DIR, env));
-  }
+  let svcProcs = [];
+  let gwProc   = null;
 
-  // ── 2. Start gateway ───────────────────────────────────────────
-  log('Starting API Gateway …');
-  const gwProc = spawnProcess('gateway', 'node', ['server.js'], GW_DIR, {
-    PORT: String(GW_PORT),
-    SERVICES: 'http://localhost:3001,http://localhost:3002,http://localhost:3003',
-  });
+  if (DOCKER_MODE) {
+    log(`Docker mode detected — connecting to existing gateway at ${EFFECTIVE_GATEWAY}`);
+    log('Waiting for gateway to be reachable …');
+    try {
+      await waitForPort(
+        parseInt(new URL(EFFECTIVE_GATEWAY).port || 8080),
+        40, 2000,
+        new URL(EFFECTIVE_GATEWAY).hostname
+      );
+      ok('Gateway is ready!');
+    } catch(e) {
+      warn(`Gateway not ready: ${e.message}. Continuing anyway …`);
+    }
+    await sleep(2000);
+  } else {
+    // ── 1. Start microservices ─────────────────────────────────────
+    log('Starting 3 microservice nodes …');
+    const svcEnvs = [
+      { PORT: '3001', SERVICE_NAME: 'Service_Node_A', WEIGHT: '1' },
+      { PORT: '3002', SERVICE_NAME: 'Service_Node_B', WEIGHT: '2' },
+      { PORT: '3003', SERVICE_NAME: 'Service_Node_C', WEIGHT: '3' },
+    ];
+    for (const env of svcEnvs) {
+      svcProcs.push(spawnProcess(`svc-${env.PORT}`, 'node', ['server.js'], SVC_DIR, env));
+    }
 
-  // ── 3. Wait until all ports are ready ─────────────────────────
-  log('Waiting for services to be ready …');
-  try {
-    await Promise.all([
-      ...SVC_PORTS.map(p => waitForPort(p, 20, 800)),
-      waitForPort(GW_PORT, 25, 800),
-    ]);
-    ok('All services ready!');
-  } catch(e) {
-    warn(`Some services may not have started: ${e.message}. Continuing anyway …`);
+    // ── 2. Start gateway ───────────────────────────────────────────
+    log('Starting API Gateway …');
+    gwProc = spawnProcess('gateway', 'node', ['server.js'], GW_DIR, {
+      PORT: String(GW_PORT),
+      SERVICES: 'http://localhost:3001,http://localhost:3002,http://localhost:3003',
+    });
+
+    // ── 3. Wait until all ports are ready ─────────────────────────
+    log('Waiting for services to be ready …');
+    try {
+      await Promise.all([
+        ...SVC_PORTS.map(p => waitForPort(p, 20, 800)),
+        waitForPort(GW_PORT, 25, 800),
+      ]);
+      ok('All services ready!');
+    } catch(e) {
+      warn(`Some services may not have started: ${e.message}. Continuing anyway …`);
+    }
+    await sleep(1500); // extra settle time
   }
-  await sleep(1500); // extra settle time
 
   // ── 4. Warm-up ────────────────────────────────────────────────
   log(`Warm-up phase (${WARM_UP_SEC}s) …`);
-  await runAutocannon(`${GATEWAY_URL}/route/rr?workload=read`, WARM_UP_SEC, 5);
+  await runAutocannon(`${EFFECTIVE_GATEWAY}/route/rr?workload=read`, WARM_UP_SEC, 5);
   ok('Warm-up complete');
 
   // ── 5. Run scenarios ──────────────────────────────────────────
   const scenarioResults = [];
   for (const s of SCENARIOS) {
     log(`Running: ${s.label} …`);
-    const result = await runAutocannon(`${GATEWAY_URL}${s.url}`, DURATION_SEC, CONNECTIONS);
+    const result = await runAutocannon(`${EFFECTIVE_GATEWAY}${s.url}`, DURATION_SEC, CONNECTIONS);
     ok(`  ✓ ${result.requests} reqs | ${result.throughputRps} rps | p95=${result.latencyMs.p95}ms | errors=${result.errors}`);
     scenarioResults.push({ ...s, ...result });
   }
@@ -371,11 +395,17 @@ async function main() {
   console.log('└───────────────────────────┴──────────┴──────────┴──────────┴──────────┘\x1b[0m');
 
   console.log('\n\x1b[32m✅ Phase 3 complete! Reports written to ./reports/\x1b[0m');
-  console.log('\x1b[33m   Next: open reports/dashboard.html in your browser.\x1b[0m\n');
+  if (DOCKER_MODE) {
+    console.log('\x1b[33m   Open http://localhost:9090 in your browser for the live dashboard.\x1b[0m\n');
+  } else {
+    console.log('\x1b[33m   Next: open reports/dashboard.html in your browser.\x1b[0m\n');
+  }
 
   // ── Cleanup ───────────────────────────────────────────────────
-  gwProc.kill();
-  for (const p of svcProcs) p.kill();
+  if (!DOCKER_MODE) {
+    if (gwProc)  gwProc.kill();
+    for (const p of svcProcs) p.kill();
+  }
   process.exit(0);
 }
 
